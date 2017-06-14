@@ -67,6 +67,7 @@ const says = {
   yes: '네!',
   hello: '안녕하세요!',
   stupid: '스투핏!',
+  superStupid: '슈퍼 스투핏!',
   pleaseNumber: '번호를 다시 입력해주세요..!',
   noHistory: '최근 결제 내역이 없습니다!',
   retryModify: '처음부터 다시 수정해주세요 ㅜㅜ',
@@ -160,14 +161,20 @@ let handlers = {
     return pocket.goal(id).then(goal => {
       return pocket.today(id).then(res => {
         let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-        return merge([
+        let remain = goal.amount - totalUsed;
+        let texts = [
           ...res.map(
             e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`
           ),
-          `총 ${withComma(totalUsed)}원 사용했고, ${withComma(
-            goal.amount - totalUsed
-          )}원 남았습니다.`
-        ]);
+          `총 ${withComma(totalUsed)}원 사용했고, ${withComma(remain)}원 남았습니다.`
+        ];
+        if (remain < 0) {
+          texts.push(says.superStupid);
+        }
+        else if (remain < goal.amount / 4) {
+          texts.push(says.stupid);
+        }
+        return merge(texts);
       });
     });
   },
