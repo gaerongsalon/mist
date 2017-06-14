@@ -214,7 +214,7 @@ let handlers = {
           : merge(res.map(e => `[${e.alias}] ${e.name}`)));
   },
   [commands.addCategory]: (id, s, alias, name) => {
-    return pocket.addCategory(id, +alias, name).then(res => says.yes);
+    return pocket.addCategory(id, +alias, name.trim()).then(res => says.yes);
   },
   [commands.help]: () => says.help,
   [commands.hello]: () => says.hello,
