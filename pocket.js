@@ -4,25 +4,25 @@ const db = require('./db.js');
 
 let recent = (id, cnt) => {
   return db.query(
-    'SELECT h.idx, c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.category = c.alias WHERE h.id = ? ORDER BY h.registered DESC LIMIT ?',
+    'SELECT h.idx, c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? ORDER BY h.registered DESC LIMIT ?',
     [id, cnt]
   );
 };
 let today = id => {
   return db.query(
-    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.category = c.alias WHERE h.id = ? AND h.registered >= CURDATE() ORDER BY h.registered ASC',
+    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND h.registered >= CURDATE() ORDER BY h.registered ASC',
     [id]
   );
 };
 let week = id => {
   return db.query(
-    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR(NOW()) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR(NOW()) ORDER BY h.registered ASC',
+    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR(NOW()) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR(NOW()) ORDER BY h.registered ASC',
     [id]
   );
 };
 let month = id => {
   return db.query(
-    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR(NOW()) AND MONTH(h.registered)=MONTH(NOW()) ORDER BY h.registered ASC',
+    'SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR(NOW()) AND MONTH(h.registered)=MONTH(NOW()) ORDER BY h.registered ASC',
     [id]
   );
 };
