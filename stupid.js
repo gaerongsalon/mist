@@ -64,19 +64,20 @@ const stateCommands = {
 };
 
 const says = {
-  yes: '네',
+  yes: '네!',
   hello: '안녕하세요!',
   stupid: '스투핏!',
-  pleaseNumber: '번호를 다시 입력해주세요.',
-  noHistory: '최근 결제 내역이 없습니다.',
-  retryModify: '처음부터 다시 수정해주세요.',
+  pleaseNumber: '번호를 다시 입력해주세요..!',
+  noHistory: '최근 결제 내역이 없습니다!',
+  retryModify: '처음부터 다시 수정해주세요 ㅜㅜ',
   deleted: '지웠습니다!',
-  modificationCompleted: '수정을 완료합니다.',
-  modifyHelp: '[숫자]를 입력하여 선택한 내역을 삭제하거나, [그만]을 하여 수정을 그만 둘 수 있습니다.',
+  modificationCompleted: '수정을 완료합니다 :)',
+  modifyHelp: '[숫자]를 입력하여 선택한 내역을 삭제하거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
   modifySelectedHelp:
-    '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있습니다.',
+    '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
   help:
-    '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있습니다.'
+    '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
+  goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!'
 };
 
 let withComma = number => ('' + number).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -110,7 +111,9 @@ let handlers = {
       let data = res.map(e => {
         return {
           idx: e.idx,
-          text: `[${number++}] (${e.category}) ${e.comment} ${withComma(e.amount)}`
+          text: `[${number++}] (${e.category}) ${e.comment} ${withComma(
+            e.amount
+          )}`
         };
       });
       return state.save(id, { name: states.modify, data: data }).then(() => {
@@ -157,7 +160,9 @@ let handlers = {
       return pocket.today(id).then(res => {
         let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
         return merge([
-          ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`),
+          ...res.map(
+            e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`
+          ),
           `총 ${withComma(totalUsed)}원 사용했고, ${withComma(
             goal.amount - totalUsed
           )}원 남았습니다.`
@@ -187,10 +192,17 @@ let handlers = {
     return pocket.setGoal(id, amount).then(() => says.yes);
   },
   [commands.goal]: id => {
-    return pocket.goal(id).then(res => `목표는 ${withComma(res.amount)}원입니다.`);
+    return pocket
+      .goal(id)
+      .then(
+        res =>
+          res.amount === 0 ? says.goalHelp : `목표는 ${withComma(res.amount)}원입니다.`
+      );
   },
   [commands.addHistory]: (id, s, category, comment, amount) => {
-    return pocket.addHistory(id, +category, comment, +amount).then(() => says.yes);
+    return pocket
+      .addHistory(id, +category, comment, +amount)
+      .then(() => says.yes);
   },
   [commands.showCategory]: id => {
     return pocket
@@ -198,13 +210,11 @@ let handlers = {
       .then(res => merge(res.map(e => `[${e.alias}] ${e.name}`)));
   },
   [commands.addCategory]: (id, s, alias, name) => {
-    return pocket
-      .addCategory(id, +alias, name)
-      .then(res => says.yes);
+    return pocket.addCategory(id, +alias, name).then(res => says.yes);
   },
   [commands.help]: () => says.help,
   [commands.hello]: () => says.hello,
-  [commands.stupid]: () => says.stupid,
+  [commands.stupid]: () => says.stupid
 };
 
 let handle = (id, text) => {

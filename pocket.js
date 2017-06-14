@@ -28,7 +28,9 @@ let month = id => {
 };
 
 let goal = id => {
-  return db.queryOne('SELECT amount FROM goal WHERE id = ?', [id], { amount: 0 });
+  return db.queryOne('SELECT amount FROM goal WHERE id = ?', [id], {
+    amount: 0
+  });
 };
 let setGoal = (id, amount) => {
   return db.query('REPLACE INTO goal (id, amount) VALUES (?, ?)', [id, amount]);
@@ -51,7 +53,11 @@ let showCategory = id => {
   return db.query('SELECT alias, name FROM category WHERE id = ?', [id]);
 };
 let addCategory = (id, alias, name) => {
-  return db.query('REPLACE INTO category (id, alias, name) VALUES (?, ?, ?)', [id, alias, name]);
+  return db.query('REPLACE INTO category (id, alias, name) VALUES (?, ?, ?)', [
+    id,
+    alias,
+    name
+  ]);
 };
 
 module.exports = {
