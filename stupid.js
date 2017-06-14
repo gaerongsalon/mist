@@ -77,7 +77,8 @@ const says = {
     '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
   help:
     '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
-  goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!'
+  goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!',
+  categoryHelp: '[(분류) (번호) (이름) 추가]로 분류를 추가해보세요!'
 };
 
 let withComma = number => ('' + number).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -207,7 +208,10 @@ let handlers = {
   [commands.showCategory]: id => {
     return pocket
       .showCategory(id)
-      .then(res => merge(res.map(e => `[${e.alias}] ${e.name}`)));
+      .then(res => 
+        res.length === 0
+          ? says.categoryHelp
+          : merge(res.map(e => `[${e.alias}] ${e.name}`)));
   },
   [commands.addCategory]: (id, s, alias, name) => {
     return pocket.addCategory(id, +alias, name).then(res => says.yes);
