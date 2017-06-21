@@ -11,6 +11,7 @@ const commandParsers = {
   modifyDelete: /^(?:ㅇㅇ|지워|삭제)[!]*$/,
   modifyCancel: /^(?:ㅂㅂ|그만|취소)[!]*$/,
   today: /^오늘[!]*$/,
+  yesterday: /^어제[!]*$/,
   week: /^이번\s*주[!]*$/,
   month: /^이번\s*달[!]*$/,
   setGoal: /^(?:용돈|목표)\s*(\d+)(?:원)?[!]*$/,
@@ -20,7 +21,8 @@ const commandParsers = {
   addCategory: /^(?:카테고리|분류)\s+(\d+)\s+(.+)(?:추가)[!]*$/,
   help: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
   modifyHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  modifySelectedHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/
+  modifySelectedHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
+  sumOfCategory: /^(?:누적)\s*(오늘|이번 주|이번주|이번 달|이번달|전체)?\s*(.*)?$/
 };
 const commands = Object.keys(commandParsers).reduce((m, e) => {
   m[e] = e;
@@ -37,6 +39,7 @@ const stateCommands = {
   [states.empty]: [
     commands.modify,
     commands.today,
+    commands.yesterday,
     commands.week,
     commands.month,
     commands.setGoal,
@@ -46,7 +49,8 @@ const stateCommands = {
     commands.addCategory,
     commands.help,
     commands.stupid,
-    commands.hello
+    commands.hello,
+    commands.sumOfCategory
   ],
   [states.modify]: [
     commands.modify,
@@ -79,7 +83,8 @@ const says = {
   help:
     '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
   goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!',
-  categoryHelp: '[(분류) (번호) (이름) 추가]로 분류를 추가해보세요!'
+  categoryHelp: '[(분류) (번호) (이름) 추가]로 분류를 추가해보세요!',
+  sumOfCategory: '[(누적) (기간) (분류 이름)]으로 계산해보세요!'
 };
 
 let withComma = number => ('' + number).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -104,7 +109,8 @@ let merge = texts => {
 
 let handlers = {
   [commands.modify]: (id, s, cnt) => {
-    return pocket.recent(id, cnt || 10).then(res => {
+    return pocket.recent(id, cnt || 10).then(dbres => {
+      let res = [...dbres];
       if (res.length == 0) {
         return says.noHistory;
       }
@@ -164,25 +170,33 @@ let handlers = {
         let remain = goal.amount - totalUsed;
         let texts = [
           ...res.map(
-            e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`
+            e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`
           ),
           `총 ${withComma(totalUsed)}원 사용했고, ${withComma(remain)}원 남았습니다.`
         ];
         if (remain < 0) {
           texts.push(says.superStupid);
-        }
-        else if (remain < goal.amount / 4) {
+        } else if (remain < goal.amount / 4) {
           texts.push(says.stupid);
         }
         return merge(texts);
       });
     });
   },
+  [commands.yesterday]: id => {
+    return pocket.yesterday(id).then(res => {
+      let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
+      return merge([
+        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
+        `총 ${withComma(totalUsed)}원 사용했습니다.`
+      ]);
+    });
+  },
   [commands.week]: id => {
     return pocket.week(id).then(res => {
       let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
       return merge([
-        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`),
+        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
         `총 ${withComma(totalUsed)}원 사용했습니다.`
       ]);
     });
@@ -191,9 +205,47 @@ let handlers = {
     return pocket.month(id).then(res => {
       let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
       return merge([
-        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}`),
+        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
         `총 ${withComma(totalUsed)}원 사용했습니다.`
       ]);
+    });
+  },
+  [commands.sumOfCategory]: (id, s, range, categoryNameOrAlias) => {
+    return pocket.findCategoryIdx(id, categoryNameOrAlias).then(category => {
+      if (category.idx < 0) {
+        return handlers[commands.showCategory](id);
+      }
+      let fetch = pocket.sumOfCategoryInWholeRange;
+      if (range !== undefined) {
+        switch (range) {
+          case '오늘':
+            fetch = pocket.sumOfCategoryInToday;
+            break;
+          case '어제':
+            fetch = pocket.sumOfCategoryInYesterday;
+            break;
+          case '이번 주':
+          case '이번주':
+            fetch = pocket.sumOfCategoryInWeek;
+            break;
+          case '이번 달':
+          case '이번달':
+            fetch = pocket.sumOfCategoryInMonth;
+            break;
+          case '전체':
+            fetch = pocket.sumOfCategoryInWholeRange;
+            break;
+          default:
+            return says.sumOfCategory;
+        }
+      }
+      return fetch(id, category.idx).then(res => {
+        let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
+        return merge([
+          ...res.map(e => `[${e.category}] ${withComma(e.amount)}원`),
+          `총 ${withComma(totalUsed)}원 사용했습니다.`
+        ]);
+      });
     });
   },
   [commands.setGoal]: (id, s, amount) => {
@@ -215,10 +267,12 @@ let handlers = {
   [commands.showCategory]: id => {
     return pocket
       .showCategory(id)
-      .then(res => 
-        res.length === 0
-          ? says.categoryHelp
-          : merge(res.map(e => `[${e.alias}] ${e.name}`)));
+      .then(
+        res =>
+          res.length === 0
+            ? says.categoryHelp
+            : merge(res.map(e => `[${e.alias}] ${e.name}`))
+      );
   },
   [commands.addCategory]: (id, s, alias, name) => {
     return pocket.addCategory(id, +alias, name.trim()).then(res => says.yes);
