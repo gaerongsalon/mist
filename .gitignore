@@ -8,3 +8,8 @@ jspm_packages
 # misc
 .env
 *.swp
+package-lock.json
+
+# vscode
+launch.json
+settings.json
