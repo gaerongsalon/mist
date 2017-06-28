@@ -8,7 +8,7 @@
     "aws-serverless-express": "^3.0.1",
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
-    "mysql": "github:mysqljs/mysql"
+    "mysql": "^2.13.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
