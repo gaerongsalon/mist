@@ -10,7 +10,9 @@ const dbConfig = {
 
 let query = (sql, params) =>
   new Promise((resolve, reject) => {
-    console.log(`Execute query[${sql}] with params[${params}]`);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`Execute query[${sql}] with params[${params}]`);
+    }
     let db = mysql.createConnection(dbConfig);
     db.connect();
     db.query(sql, params, (err, result, fields) => {
@@ -20,7 +22,9 @@ let query = (sql, params) =>
         reject(err);
       } else {
         resolve(result);
-        console.log(`DB result is ${JSON.stringify(result)}`);
+        if (process.env.NODE_ENV !== 'test') {
+          console.log(`DB result is ${JSON.stringify(result)}`);
+        }
       }
     });
   });

@@ -22,7 +22,14 @@ const commandParsers = {
   help: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
   modifyHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
   modifySelectedHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  sumOfCategory: /^(?:누적)\s*(오늘|이번 주|이번주|이번 달|이번달|전체)?\s*(.*)?$/
+  sumOfCategory: /^(?:누적)\s*(오늘|이번 주|이번주|이번 달|이번달|전체)?\s*(.*)?$/,
+  addBugdet: /^(?:예산)\s*(?:책정)\s*([0-9]+)\s*(\w+)?$/,
+  deleteBudget: /^(?:예산)\s*(?:삭제)\s*(\w+)$/,
+  showBudgetStatus: /^(?:예산\s*현황|결산)\s*(\w+)$/,
+  changeBudget: /^(?:예산)\s*(?:설정)\s*(\w+)$/,
+  cancelBudget: /^(?:예산)\s*(?:취소)$/,
+  setDefaultTzOffset: /^(?:기본)\s*(?:시간)\s*(-?[0-9]+)$/,
+  setDefaultCurrency: /^(?:기본)\s*(?:화폐)\s*(\w+)$/
 };
 const commands = Object.keys(commandParsers).reduce((m, e) => {
   m[e] = e;
@@ -78,10 +85,8 @@ const says = {
   deleted: '지웠습니다!',
   modificationCompleted: '수정을 완료합니다 :)',
   modifyHelp: '[숫자]를 입력하여 선택한 내역을 삭제하거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
-  modifySelectedHelp:
-    '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
-  help:
-    '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
+  modifySelectedHelp: '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
+  help: '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
   goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!',
   categoryHelp: '[(분류) (번호) (이름) 추가]로 분류를 추가해보세요!',
   sumOfCategory: '[(누적) (기간) (분류 이름)]으로 계산해보세요!'
@@ -119,9 +124,7 @@ let handlers = {
       let data = res.map(e => {
         return {
           idx: e.idx,
-          text: `[${number++}] (${e.category}) ${e.comment} ${withComma(
-            e.amount
-          )}`
+          text: `[${number++}] (${e.category}) ${e.comment} ${withComma(e.amount)}`
         };
       });
       return state.save(id, { name: states.modify, data: data }).then(() => {
@@ -221,20 +224,27 @@ let handlers = {
           case '오늘':
             fetch = pocket.sumOfCategoryInToday;
             break;
+
           case '어제':
             fetch = pocket.sumOfCategoryInYesterday;
             break;
+
           case '이번 주':
+
           case '이번주':
             fetch = pocket.sumOfCategoryInWeek;
             break;
+
           case '이번 달':
+
           case '이번달':
             fetch = pocket.sumOfCategoryInMonth;
             break;
+
           case '전체':
             fetch = pocket.sumOfCategoryInWholeRange;
             break;
+
           default:
             return says.sumOfCategory;
         }
@@ -256,7 +266,9 @@ let handlers = {
       .goal(id)
       .then(
         res =>
-          res.amount === 0 ? says.goalHelp : `목표는 ${withComma(res.amount)}원입니다.`
+          (res.amount === 0
+            ? says.goalHelp
+            : `목표는 ${withComma(res.amount)}원입니다.`)
       );
   },
   [commands.addHistory]: (id, s, category, comment, amount) => {
@@ -269,9 +281,9 @@ let handlers = {
       .showCategory(id)
       .then(
         res =>
-          res.length === 0
+          (res.length === 0
             ? says.categoryHelp
-            : merge(res.map(e => `[${e.alias}] ${e.name}`))
+            : merge(res.map(e => `[${e.alias}] ${e.name}`)))
       );
   },
   [commands.addCategory]: (id, s, alias, name) => {
@@ -286,8 +298,7 @@ let handle = (id, text) => {
   console.log(`user[${id}] requests a text[${text}]`);
   return state.load(id).then(currentState => {
     if (
-      currentState.name === undefined ||
-      states[currentState.name] === undefined
+      currentState.name === undefined || states[currentState.name] === undefined
     ) {
       currentState.name = states.empty;
     }
