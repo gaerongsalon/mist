@@ -6,7 +6,7 @@ const fields = 'h.idx, c.name AS category, h.comment, h.amount, h.registered';
 const sumFields = 'c.name AS category, SUM(h.amount) AS amount';
 
 const from = `history h
-    INNER JOIN category c ON h.id = c.id AND h.category = c.alias
+    INNER JOIN category c ON h.id = c.id AND h.category = c.idx
     INNER JOIN user u ON h.id = u.id AND h.budget_idx = u.current_budget_idx`;
 const range = {
   today: offset =>
