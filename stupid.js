@@ -173,17 +173,19 @@ const handle = (id, text) => {
   console.log(`user[${id}] requests a text[${text}]`);
   return user.load(id).then(u => {
     if (process.env.NODE_ENV !== 'test') {
-      console.log(`current user is ${u}`);
+      console.log(`current user is ${JSON.stringify(u)}`);
     }
     const cmd = (text || '').trim();
     const state = u.state && u.state.name ? u.state.name : states.empty;
-    const result = routes[state].run(cmd, [u]);
-    if (process.env.NODE_ENV !== 'test') {
-      console.log(
-        `result of cmd[${cmd}] in user[${u.id}]'s state[${state}] is result[${result}]`
-      );
-    }
-    return Promise.resolve(result);
+    return routes[state].run(cmd, [u])
+      .then(result => {
+        if (process.env.NODE_ENV !== 'test') {
+          console.log(
+            `result of cmd[${cmd}] in user[${u.id}]'s state[${state}] is result[${JSON.stringify(result)}]`
+          );
+        }
+        return result;
+      });
   });
 };
 

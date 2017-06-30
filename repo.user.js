@@ -9,7 +9,7 @@ const load = id =>
     .queryOne(
       'SELECT id, goal, tz, current_budget_idx, currency, state FROM user WHERE id=?',
       [id],
-      { id }
+      { id: id, tz: 9, goal: 0 }
     )
     .then(u => {
       if (u.state === undefined) {
