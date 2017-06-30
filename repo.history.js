@@ -7,7 +7,7 @@ const sumFields = 'c.name AS category, SUM(h.amount) AS amount';
 
 const from =
   'history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias';
-let range = {
+const range = {
   today: offset =>
     `(h.registered >= (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR))`,
   yesterday: offset =>
@@ -17,67 +17,67 @@ let range = {
   month: offset =>
     `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR)) AND MONTH(h.registered)=MONTH((NOW() - INTERVAL ${offset} HOUR)))`
 };
-let categoryWhere = idx => `(c.idx = ${idx} OR ${idx} = 0)`;
+const categoryWhere = c => `(c.idx = ${c.idx} OR ${c.idx} = -1)`;
 
-let recent = (u, cnt) =>
+const recent = (u, cnt) =>
   db.query(
     `SELECT ${fields} FROM ${from} WHERE h.id = ? ORDER BY h.registered DESC LIMIT ?`,
     [u.id, cnt]
   );
 
-let today = u =>
+const today = u =>
   db.query(
     `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.today(u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
-let yesterday = u =>
+const yesterday = u =>
   db.query(
     `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.yesterday(u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
-let week = u =>
+const week = u =>
   db.query(
     `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.week(u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
-let month = u =>
+const month = u =>
   db.query(
     `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.month(u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
 
-let sumOfCategoryInToday = (u, cidx) =>
+const sumOfCategoryInToday = (u, c) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.today(u.tz)} AND ${categoryWhere(cidx)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.today(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-let sumOfCategoryInYesterday = (u, cidx) =>
+const sumOfCategoryInYesterday = (u, c) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.yesterday(u.tz)} AND ${categoryWhere(cidx)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.yesterday(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-let sumOfCategoryInWeek = (u, cidx) =>
+const sumOfCategoryInWeek = (u, c) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.week(u.tz)} AND ${categoryWhere(cidx)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.week(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-let sumOfCategoryInMonth = (u, cidx) =>
+const sumOfCategoryInMonth = (u, c) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.month(u.tz)} AND ${categoryWhere(cidx)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.month(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-let sumOfCategoryInWholeRange = (u, cidx) =>
+const sumOfCategoryInWholeRange = (u, c) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${categoryWhere(cidx)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
 
-let addHistory = (id, category, comment, amount) =>
+const addHistory = (id, category, comment, amount) =>
   db.query(
     'INSERT INTO history (id, category, comment, amount) VALUES (?, ?, ?, ?)',
     [id, category, comment, amount]
   );
-let deleteHistory = (id, idx) => {
+const deleteHistory = (id, idx) => {
   return db.query('DELETE FROM history WHERE id = ? AND idx = ?', [id, idx]);
 };
 

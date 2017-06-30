@@ -64,12 +64,12 @@ describe('User module', () => {
   it('save state', () => {
     return user
       .save('test')
-      .state({ name: 'budget', value: ['a', 'b', 'c'] })
+      .state({ name: 'empty', value: ['a', 'b', 'c'] })
       .then(() => {
         return user.load('test');
       })
       .then(u => {
-        assert.equal(u.state.name, 'budget');
+        assert.equal(u.state.name, 'empty');
         assert.equal(u.state.value.length, 3);
         assert.equal(u.state.value[0], 'a');
         assert.equal(u.state.value[1], 'b');

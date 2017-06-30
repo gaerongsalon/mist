@@ -1,29 +1,101 @@
 'use strict';
 
-const pocket = require('./pocket.js');
-const state = require('./state.js');
+if (require.main === module) {
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname + '/.env') });
+}
 
-const commandParsers = {
-  hello: /^(?:안녕|하이|스하).*$/,
-  stupid: /^(?:스투핏|스뚜삣|스튜핏).*$/,
-  modify: /^수정\s*(\d+)?(?:개)?[!]*$/,
-  modifyNumber: /^(\d+)(?:번)?[!]*$/,
-  modifyDelete: /^(?:ㅇㅇ|지워|삭제)[!]*$/,
-  modifyCancel: /^(?:ㅂㅂ|그만|취소)[!]*$/,
-  today: /^오늘[!]*$/,
-  yesterday: /^어제[!]*$/,
-  week: /^이번\s*주[!]*$/,
-  month: /^이번\s*달[!]*$/,
-  setGoal: /^(?:용돈|목표)\s*(\d+)(?:원)?[!]*$/,
-  goal: /^(?:용돈|목표)[!]*$/,
-  addHistory: /^(\d+)\s*(.+)\s+(\d+)(?:원)?[!]*$/,
-  showCategory: /^(?:카테고리|분류)[!]*$/,
-  addCategory: /^(?:카테고리|분류)\s+(\d+)\s+(.+)(?:추가)[!]*$/,
-  help: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  modifyHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  modifySelectedHelp: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  sumOfCategory: /^(?:누적)\s*(오늘|이번 주|이번주|이번 달|이번달|전체)?\s*(.*)?$/,
-  addBugdet: /^(?:예산)\s*(?:책정)\s*([0-9]+)\s*(\w+)?$/,
+const util = require('./util');
+const say = require('./say');
+const pocket = require('./pocket');
+const user = require('./repo.user');
+const category = require('./repo.category');
+const history = require('./repo.history');
+
+const states = {
+  empty: 'empty',
+  modify: 'modify',
+  modifySelected: 'modifySelected'
+};
+const routes = util.routes(states);
+
+let showCategory = u =>
+  (u.categories.length == 0
+    ? say.categoryHelp
+    : util.merge(u.categories.map(e => `[${e.alias}] ${e.name}`)));
+
+routes[states.empty]
+  // greetings
+  .add(/^(?:안녕|하이|스하).*$/, () => say.hello)
+  .add(/^(?:스투핏|스뚜삣|스튜핏).*$/, () => say.stupid)
+  .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => say.help)
+  // report
+  .add(/^오늘[!]*$/, pocket.reportToday)
+  .add(/^어제[!]*$/, pocket.reportYesterday)
+  .add(/^이번\s*주[!]*$/, pocket.reportWeek)
+  .add(/^이번\s*달[!]*$/, pocket.reportMonth)
+  // summary
+  .add(/^(?:누적)\s*(?:오늘)\s*(.*)?$/, pocket.summarizeToday)
+  .add(/^(?:누적)\s*(?:어제)\s*(.*)?$/, pocket.summarizeYesterday)
+  .add(/^(?:누적)\s*(?:이번\s*주)\s*(.*)?$/, pocket.summarizeWeek)
+  .add(/^(?:누적)\s*(?:이번\s*달)\s*(.*)?$/, pocket.summarizeMonth)
+  .add(/^(?:누적)\s*(?:전체)?\s*(.*)?$/, pocket.summarizeTotal)
+  // property
+  .add(/^(?:용돈|목표)\s*(\d+(?:\.\d+)?)(?:\w+)?[!]*$/, (u, amount) =>
+    user.save(u.id).goal(amount).then(() => say.yes)
+  )
+  .add(
+    /^(?:용돈|목표)[!]*$/,
+    u => `목표는 ${util.withComma(u.goal)}${u.currentCurrency}입니다.`
+  )
+  .add(
+    /^(?:기본)\s*(?:시간)\s*(-?[0-9]+)?$/,
+    (u, tz) =>
+      (tz
+        ? user.save(u.id).tz(+tz).then(() => say.yes)
+        : `현재 설정된 시간대는 ${u.tz}입니다.`)
+  )
+  .add(
+    /^(?:기본)\s*(?:화폐)\s*(\w+)?$/,
+    (u, currency) =>
+      (currency
+        ? user.save(u.id).currency(currency.trim()).then(() => say.yes)
+        : `현재 설정된 기본 화폐는 ${u.currency}입니다.`)
+  )
+  // category
+  .add(/^(?:카테고리|분류)[!]*$/, showCategory)
+  .add(/^(?:카테고리|분류)\s+(\d+)\s+(.+)(?:추가)[!]*$/, (u, alias, name) =>
+    category.save(u.id, alias, name.trim()).then(() => say.yes)
+  );
+
+// modify history
+routes[states.empty]
+  .add(
+    /^([\d\w]+)\s*(.+)\s+(\d+(?:\.\d+)?)(?:\w+)?[!]*$/,
+    (u, categoryNameOrAlias, comment, amount) => {
+      const c = u.findCategory(categoryNameOrAlias);
+      return c.absent
+        ? showCategory(u)
+        : history.addHistory(u.id, c.idx, comment, +amount).then(() => say.yes);
+    }
+  )
+  .add(/^수정\s*(\d+)?(?:개)?[!]*$/, pocket.startModify);
+
+routes[states.modify]
+  .add(/^수정\s*(\d+)?(?:개)?[!]*$/, pocket.startModify)
+  .add(/^(\d+)(?:번)?[!]*$/, pocket.selectModifyNumber)
+  .add(/^(?:ㅂㅂ|그만|취소)[!]*$/, pocket.cancelModification)
+  .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => say.modifyHelp);
+
+routes[states.modifySelected]
+  .add(/^수정\s*(\d+)?(?:개)?[!]*$/, pocket.startModify)
+  .add(/^(\d+)(?:번)?[!]*$/, pocket.selectModifyNumber)
+  .add(/^(?:ㅂㅂ|그만|취소)[!]*$/, pocket.cancelModification)
+  .add(/^(?:ㅇㅇ|지워|삭제)[!]*$/, pocket.deleteSelectedHistory)
+  .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => say.modifySelectedHelp);
+
+const parsers = {
+  addBugdet: /^(?:예산)\s*(?:책정)\s*(\d+(?:\.\d+)?)\s*(\w+)?$/,
   deleteBudget: /^(?:예산)\s*(?:삭제)\s*(\w+)$/,
   showBudgetStatus: /^(?:예산\s*현황|결산)\s*(\w+)$/,
   changeBudget: /^(?:예산)\s*(?:설정)\s*(\w+)$/,
@@ -31,299 +103,22 @@ const commandParsers = {
   setDefaultTzOffset: /^(?:기본)\s*(?:시간)\s*(-?[0-9]+)$/,
   setDefaultCurrency: /^(?:기본)\s*(?:화폐)\s*(\w+)$/
 };
-const commands = Object.keys(commandParsers).reduce((m, e) => {
-  m[e] = e;
-  return m;
-}, {});
 
-const states = {
-  empty: 'empty',
-  modify: 'modify',
-  modifySelected: 'modifySelected'
-};
-
-const stateCommands = {
-  [states.empty]: [
-    commands.modify,
-    commands.today,
-    commands.yesterday,
-    commands.week,
-    commands.month,
-    commands.setGoal,
-    commands.goal,
-    commands.addHistory,
-    commands.showCategory,
-    commands.addCategory,
-    commands.help,
-    commands.stupid,
-    commands.hello,
-    commands.sumOfCategory
-  ],
-  [states.modify]: [
-    commands.modify,
-    commands.modifyNumber,
-    commands.modifyCancel,
-    commands.modifyHelp
-  ],
-  [states.modifySelected]: [
-    commands.modify,
-    commands.modifyNumber,
-    commands.modifyCancel,
-    commands.modifyDelete,
-    commands.modifySelectedHelp
-  ]
-};
-
-const says = {
-  yes: '네!',
-  hello: '안녕하세요!',
-  stupid: '스투핏!',
-  superStupid: '슈퍼 스투핏!',
-  pleaseNumber: '번호를 다시 입력해주세요..!',
-  noHistory: '최근 결제 내역이 없습니다!',
-  retryModify: '처음부터 다시 수정해주세요 ㅜㅜ',
-  deleted: '지웠습니다!',
-  modificationCompleted: '수정을 완료합니다 :)',
-  modifyHelp: '[숫자]를 입력하여 선택한 내역을 삭제하거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
-  modifySelectedHelp: '[숫자]를 다시 입력하여 선택한 내역을 바꾸거나, [지워]를 써서 선택된 내역을 지우거나, [그만]을 하여 수정을 그만 둘 수 있어요.',
-  help: '[분류]를 확인하고, [목표 (원)]으로 목표를 설정합니다. [(분류) (내역) (금액)]을 써서 내역을 입력한 후, [수정]을 할 수도 있습니다. 그리고 [오늘], [이번 주], [이번 달]의 내역을 조회할 수 있어요.',
-  goalHelp: '[(목표) 20000원]과 같이 목표를 설정해보세요!',
-  categoryHelp: '[(분류) (번호) (이름) 추가]로 분류를 추가해보세요!',
-  sumOfCategory: '[(누적) (기간) (분류 이름)]으로 계산해보세요!'
-};
-
-let withComma = number => ('' + number).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-let merge = texts => {
-  console.log('merge=' + JSON.stringify(texts));
-  const maxLength = 1900;
-
-  let msgs = [];
-  let msg = [];
-  for (let text of texts) {
-    msg.push(text);
-    if (msg.map(e => e.length).reduce((a, b) => a + b, 0) > maxLength) {
-      msgs.push(msg.join('\n'));
-      msg.removeAll();
-    }
-  }
-  if (msg.length > 0) {
-    msgs.push(msg.join('\n'));
-  }
-  return msgs;
-};
-
-let handlers = {
-  [commands.modify]: (id, s, cnt) => {
-    return pocket.recent(id, cnt || 10).then(dbres => {
-      let res = [...dbres];
-      if (res.length == 0) {
-        return says.noHistory;
-      }
-      res.reverse();
-      var number = 1;
-      let data = res.map(e => {
-        return {
-          idx: e.idx,
-          text: `[${number++}] (${e.category}) ${e.comment} ${withComma(e.amount)}`
-        };
-      });
-      return state.save(id, { name: states.modify, data: data }).then(() => {
-        return merge(data.map(e => e.text));
-      });
-    });
-  },
-  [commands.modifyNumber]: (id, s, n) => {
-    if (n === undefined) {
-      return says.pleaseNumber;
-    }
-    const target = +n - 1;
-    if (n < 0 && n >= s.data.length) {
-      return says.pleaseNumber;
-    }
-    return state
-      .save(id, { name: states.modifySelected, n: target, data: s.data })
-      .then(() => s.data[target].text);
-  },
-  [commands.modifyDelete]: (id, s) => {
-    if (s.n === undefined) {
-      return says.pleaseNumber;
-    }
-    const target = s.data[+s.n].idx;
-    if (target === undefined) {
-      return state
-        .save(id, { name: states.empty })
-        .then(() => says.retryModfiy);
-    }
-    return pocket
-      .deleteHistory(id, target)
-      .then(() => state.save(id, { name: states.modifySelected, idx: s.idx }))
-      .then(() => says.deleted);
-  },
-  [commands.modifyCancel]: id => {
-    return state
-      .save(id, { name: states.empty })
-      .then(() => says.modificationCompleted);
-  },
-  [commands.modifyHelp]: () => says.modifyHelp,
-  [commands.modifySelectedHelp]: () => says.modifySelectedHelp,
-  [commands.today]: id => {
-    return pocket.goal(id).then(goal => {
-      return pocket.today(id).then(res => {
-        let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-        let remain = goal.amount - totalUsed;
-        let texts = [
-          ...res.map(
-            e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`
-          ),
-          `총 ${withComma(totalUsed)}원 사용했고, ${withComma(remain)}원 남았습니다.`
-        ];
-        if (remain < 0) {
-          texts.push(says.superStupid);
-        } else if (remain < goal.amount / 4) {
-          texts.push(says.stupid);
-        }
-        return merge(texts);
-      });
-    });
-  },
-  [commands.yesterday]: id => {
-    return pocket.yesterday(id).then(res => {
-      let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-      return merge([
-        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
-        `총 ${withComma(totalUsed)}원 사용했습니다.`
-      ]);
-    });
-  },
-  [commands.week]: id => {
-    return pocket.week(id).then(res => {
-      let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-      return merge([
-        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
-        `총 ${withComma(totalUsed)}원 사용했습니다.`
-      ]);
-    });
-  },
-  [commands.month]: id => {
-    return pocket.month(id).then(res => {
-      let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-      return merge([
-        ...res.map(e => `[${e.category}] ${e.comment} ${withComma(e.amount)}원`),
-        `총 ${withComma(totalUsed)}원 사용했습니다.`
-      ]);
-    });
-  },
-  [commands.sumOfCategory]: (id, s, range, categoryNameOrAlias) => {
-    return pocket.findCategoryIdx(id, categoryNameOrAlias).then(category => {
-      if (category.idx < 0) {
-        return handlers[commands.showCategory](id);
-      }
-      let fetch = pocket.sumOfCategoryInWholeRange;
-      if (range !== undefined) {
-        switch (range) {
-          case '오늘':
-            fetch = pocket.sumOfCategoryInToday;
-            break;
-
-          case '어제':
-            fetch = pocket.sumOfCategoryInYesterday;
-            break;
-
-          case '이번 주':
-
-          case '이번주':
-            fetch = pocket.sumOfCategoryInWeek;
-            break;
-
-          case '이번 달':
-
-          case '이번달':
-            fetch = pocket.sumOfCategoryInMonth;
-            break;
-
-          case '전체':
-            fetch = pocket.sumOfCategoryInWholeRange;
-            break;
-
-          default:
-            return says.sumOfCategory;
-        }
-      }
-      return fetch(id, category.idx).then(res => {
-        let totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
-        return merge([
-          ...res.map(e => `[${e.category}] ${withComma(e.amount)}원`),
-          `총 ${withComma(totalUsed)}원 사용했습니다.`
-        ]);
-      });
-    });
-  },
-  [commands.setGoal]: (id, s, amount) => {
-    return pocket.setGoal(id, amount).then(() => says.yes);
-  },
-  [commands.goal]: id => {
-    return pocket
-      .goal(id)
-      .then(
-        res =>
-          (res.amount === 0
-            ? says.goalHelp
-            : `목표는 ${withComma(res.amount)}원입니다.`)
-      );
-  },
-  [commands.addHistory]: (id, s, category, comment, amount) => {
-    return pocket
-      .addHistory(id, +category, comment, +amount)
-      .then(() => says.yes);
-  },
-  [commands.showCategory]: id => {
-    return pocket
-      .showCategory(id)
-      .then(
-        res =>
-          (res.length === 0
-            ? says.categoryHelp
-            : merge(res.map(e => `[${e.alias}] ${e.name}`)))
-      );
-  },
-  [commands.addCategory]: (id, s, alias, name) => {
-    return pocket.addCategory(id, +alias, name.trim()).then(res => says.yes);
-  },
-  [commands.help]: () => says.help,
-  [commands.hello]: () => says.hello,
-  [commands.stupid]: () => says.stupid
-};
-
-let handle = (id, text) => {
+const handle = (id, text) => {
   console.log(`user[${id}] requests a text[${text}]`);
-  return state.load(id).then(currentState => {
-    if (
-      currentState.name === undefined || states[currentState.name] === undefined
-    ) {
-      currentState.name = states.empty;
+  return user.load(id).then(u => {
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`current user is ${u}`);
     }
-    console.log(`current state is ${JSON.stringify(currentState)}`);
-    const trimmed = (text || '').trim();
-    const stateName = states[currentState.name];
-    for (let cmd of stateCommands[stateName]) {
-      let regex = commandParsers[cmd];
-      if (regex.test(trimmed)) {
-        console.log(`execute command: ${cmd}`);
-        let handler = handlers[cmd];
-        if (handler !== undefined) {
-          let matches = trimmed.match(regex);
-          let result = handler.apply(handler, [
-            id,
-            currentState,
-            ...matches.slice(1, matches.length)
-          ]);
-          console.log(`result of command[${cmd}] is ${JSON.stringify(result)}`);
-          return Promise.resolve(result);
-        }
-      }
+    const cmd = (text || '').trim();
+    const state = u.state && u.state.name ? u.state.name : states.empty;
+    const result = routes[state].run(cmd, [u]);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(
+        `result of cmd[${cmd}] in user[${u.id}]'s state[${state}] is result[${result}]`
+      );
     }
-    console.log(`command[${text}] is not found`);
-    return Promise.resolve(null);
+    return Promise.resolve(result);
   });
 };
 
@@ -332,6 +127,9 @@ module.exports = {
 };
 
 if (require.main === module) {
+  const path = require('path');
+  require('dotenv').config({ path: path.resolve(__dirname + '/.env') });
+
   const id = process.argv[2];
   const text = process.argv[3];
   console.log(`id=[${id}], text=[${text}]`);

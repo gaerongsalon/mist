@@ -8,12 +8,12 @@ const dbConfig = {
   database: process.env.DB_NAME
 };
 
-let query = (sql, params) =>
+const query = (sql, params) =>
   new Promise((resolve, reject) => {
     if (process.env.NODE_ENV !== 'test') {
       console.log(`Execute query[${sql}] with params[${params}]`);
     }
-    let db = mysql.createConnection(dbConfig);
+    const db = mysql.createConnection(dbConfig);
     db.connect();
     db.query(sql, params, (err, result, fields) => {
       db.end();
@@ -29,7 +29,7 @@ let query = (sql, params) =>
     });
   });
 
-let queryOne = (sql, params, defaultValue) => {
+const queryOne = (sql, params, defaultValue) => {
   return query(sql, params).then(res => {
     if (res === undefined || res[0] === undefined) {
       return defaultValue || {};

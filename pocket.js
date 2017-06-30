@@ -1,151 +1,159 @@
 'use strict';
 
-const db = require('./db.js');
+const util = require('./util');
+const say = require('./say');
+const user = require('./repo.user');
+const history = require('./repo.history');
+const states = require('./states');
 
-let recent = (id, cnt) => {
-  return db.query(
-    'SELECT h.idx, c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? ORDER BY h.registered DESC LIMIT ?',
-    [id, cnt]
-  );
-};
-let offset = id => {
-  return db.queryOne('SELECT offset FROM tz WHERE id = ?', [id], { offset: 9 });
-};
-let today = id => {
-  return offset(id).then(tz => {
-    return db.query(
-      `SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND h.registered >= (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR) ORDER BY h.registered ASC`,
-      [id]
-    );
-  });
-};
-let yesterday = id => {
-  return offset(id).then(tz => {
-    return db.query(
-      `SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND h.registered BETWEEN (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR - INTERVAL 1 DAY) AND (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR) ORDER BY h.registered ASC`,
-      [id]
-    );
-  });
-};
-let week = id => {
-  return offset(id).then(tz => {
-    return db.query(
-      `SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR((NOW() - INTERVAL ${tz.offset} HOUR)) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR((NOW() - INTERVAL ${tz.offset} HOUR)) ORDER BY h.registered ASC`,
-      [id]
-    );
-  });
-};
-let month = id => {
-  return offset(id).then(tz => {
-    return db.query(
-      `SELECT c.name AS category, h.comment, h.amount, h.registered FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR((NOW() - INTERVAL ${tz.offset} HOUR)) AND MONTH(h.registered)=MONTH((NOW() - INTERVAL ${tz.offset} HOUR)) ORDER BY h.registered ASC`,
-      [id]
-    );
-  });
-};
-
-let sumOfCategoryInToday = (id, categoryIdx) => {
-  return Promise.all([offset(id)]).then(res => {
-    let tz = res[0];
-    return db.query(
-      `SELECT c.name AS category, SUM(h.amount) AS amount FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND h.registered >= (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR) AND (c.idx = ? OR ? = 0) GROUP BY c.idx ORDER BY c.idx ASC`,
-      [id, categoryIdx, categoryIdx]
-    );
-  });
-};
-let sumOfCategoryInYesterday = (id, categoryIdx) => {
-  return Promise.all([offset(id)]).then(res => {
-    let tz = res[0];
-    return db.query(
-      `SELECT c.name AS category, SUM(h.amount) AS amount FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND h.registered BETWEEN (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR - INTERVAL 1 DAY) AND (DATE(NOW() + INTERVAL ${tz.offset} HOUR) - INTERVAL ${tz.offset} HOUR) AND (c.idx = ? OR ? = 0) GROUP BY c.idx ORDER BY c.idx ASC`,
-      [id, categoryIdx, categoryIdx]
-    );
-  });
-};
-let sumOfCategoryInWeek = (id, categoryIdx) => {
-  return Promise.all([offset(id)]).then(res => {
-    let tz = res[0];
-    return db.query(
-      `SELECT c.name AS category, SUM(h.amount) AS amount FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR((NOW() - INTERVAL ${tz.offset} HOUR)) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR((NOW() - INTERVAL ${tz.offset} HOUR)) AND (c.idx = ? OR ? = 0) GROUP BY c.idx ORDER BY c.idx ASC`,
-      [id, categoryIdx, categoryIdx]
-    );
-  });
-};
-let sumOfCategoryInMonth = (id, categoryIdx) => {
-  return Promise.all([offset(id)]).then(res => {
-    let tz = res[0];
-    return db.query(
-      `SELECT c.name AS category, SUM(h.amount) AS amount FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND YEAR(h.registered)=YEAR((NOW() - INTERVAL ${tz.offset} HOUR)) AND MONTH(h.registered)=MONTH((NOW() - INTERVAL ${tz.offset} HOUR)) AND (c.idx = ? OR ? = 0) GROUP BY c.idx ORDER BY c.idx ASC`,
-      [id, categoryIdx, categoryIdx]
-    );
-  });
-};
-let sumOfCategoryInWholeRange = (id, categoryIdx) => {
-  return db.query(
-    `SELECT c.name AS category, SUM(h.amount) AS amount FROM payment_history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias WHERE h.id = ? AND (c.idx = ? OR ? = 0) GROUP BY c.idx ORDER BY c.idx ASC`,
-    [id, categoryIdx, categoryIdx]
-  );
-};
-
-let goal = id => {
-  return db.queryOne('SELECT amount FROM goal WHERE id = ?', [id], {
-    amount: 0
-  });
-};
-let setGoal = (id, amount) => {
-  return db.query('REPLACE INTO goal (id, amount) VALUES (?, ?)', [id, amount]);
-};
-
-let addHistory = (id, category, comment, amount) => {
-  return db.query(
-    'INSERT INTO payment_history (id, category, comment, amount) VALUES (?, ?, ?, ?)',
-    [id, category, comment, amount]
-  );
-};
-let deleteHistory = (id, idx) => {
-  return db.query('DELETE FROM payment_history WHERE id = ? AND idx = ?', [
-    id,
-    idx
-  ]);
-};
-
-let showCategory = id => {
-  return db.query('SELECT alias, name FROM category WHERE id = ?', [id]);
-};
-let addCategory = (id, alias, name) => {
-  return db.query('REPLACE INTO category (id, alias, name) VALUES (?, ?, ?)', [
-    id,
-    alias,
-    name
-  ]);
-};
-let findCategoryIdx = (id, nameOrAlias) => {
-  if (nameOrAlias === undefined) {
-    return Promise.resolve({ idx: 0 });
+// report
+const reportHistory = (u, res, days) => {
+  const totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
+  const remain = u.goal * days - totalUsed;
+  const texts = [
+    ...res.map(
+      e =>
+        `[${e.category}] ${e.comment} ${util.withComma(e.amount)}${u.currentCurrency}`
+    ),
+    `총 ${util.withComma(totalUsed)}${u.currentCurrency} 사용했고, ${util.withComma(remain)}${u.currentCurrency} 남았습니다.`
+  ];
+  if (remain < 0) {
+    texts.push(say.superStupid);
+  } else if (remain < u.goal / 4) {
+    texts.push(say.stupid);
   }
-  return db.queryOne(
-    'SELECT idx FROM category WHERE id = ? AND (name LIKE ? OR alias = ?)',
-    [id, `%${nameOrAlias}%`, nameOrAlias],
-    { idx: -1 }
-  );
+  return util.merge(texts);
+};
+
+const reportToday = u => {
+  return history.today(u).then(res => reportHistory(u, res, 1));
+};
+const reportYesterday = u => {
+  return history.yesterday(u).then(res => reportHistory(u, res, 1));
+};
+const reportWeek = u => {
+  return history.week(u).then(res => reportHistory(u, res, 7));
+};
+const reportMonth = u => {
+  return history.month(u).then(res => reportHistory(u, res, 30));
+};
+
+const reportSummary = (u, res) => {
+  const totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
+  return util.merge([
+    ...res.map(
+      e => `[${e.category}] ${util.withComma(e.amount)}${u.currentCurrency}`
+    ),
+    `총 ${util.withComma(totalUsed)}${u.currentCurrency} 사용했습니다.`
+  ]);
+};
+
+// summarize
+const summarizeToday = (u, categoryNameOrAlias) => {
+  return history
+    .sumOfCategoryInToday(u, u.findCategory(categoryNameOrAlias))
+    .then(res => reportSummary(u, res));
+};
+const summarizeYesterday = (u, categoryNameOrAlias) => {
+  return history
+    .sumOfCategoryInYesterday(u, u.findCategory(categoryNameOrAlias))
+    .then(res => reportSummary(u, res));
+};
+const summarizeWeek = (u, categoryNameOrAlias) => {
+  return history
+    .sumOfCategoryInWeek(u, u.findCategory(categoryNameOrAlias))
+    .then(res => reportSummary(u, res));
+};
+const summarizeMonth = (u, categoryNameOrAlias) => {
+  return history
+    .sumOfCategoryInMonth(u, u.findCategory(categoryNameOrAlias))
+    .then(res => reportSummary(u, res));
+};
+const summarizeTotal = (u, categoryNameOrAlias) => {
+  return history
+    .sumOfCategoryInWholeRange(u, u.findCategory(categoryNameOrAlias))
+    .then(res => reportSummary(u, res));
+};
+
+// modify history
+const startModify = (u, cnt) => {
+  return history.recent(u, cnt || 10).then(res => {
+    if (res.length == 0) {
+      return say.noHistory;
+    }
+    res.reverse();
+    var number = 1;
+    const data = res.map(e => {
+      return {
+        idx: e.idx,
+        text: `[${number++}] (${e.category}) ${e.comment} ${util.withComma(e.amount)}${u.currentCurrency}`
+      };
+    });
+    return user
+      .save(u.id)
+      .state({ name: states.modify, data: data })
+      .then(() => {
+        return util.merge(data.map(e => e.text));
+      });
+  });
+};
+
+const selectModifyNumber = (u, n) => {
+  if (n === undefined) {
+    return say.pleaseNumber;
+  }
+  const target = +n - 1;
+  if (n < 0 && n >= u.state.data.length) {
+    return say.pleaseNumber;
+  }
+  return user
+    .save(u.id)
+    .state({
+      name: states.modifySelected,
+      n: target,
+      data: u.state.data
+    })
+    .then(() => u.state.data[target].text);
+};
+
+const deleteSelectedHistory = u => {
+  if (u.state.n === undefined) {
+    return say.pleaseNumber;
+  }
+  const target = u.state.data[+u.state.n].idx;
+  if (target === undefined) {
+    return user
+      .save(u.id)
+      .state({ name: states.empty })
+      .then(() => say.retryModfiy);
+  }
+  return history
+    .deleteHistory(u.id, target)
+    .then(() =>
+      user.save(u.id).state({ name: states.modifySelected, idx: u.state.idx })
+    )
+    .then(() => say.deleted);
+};
+
+const cancelModification = u => {
+  return user
+    .save(u.id)
+    .state({ name: states.empty })
+    .then(() => say.modificationCompleted);
 };
 
 module.exports = {
-  recent,
-  today,
-  yesterday,
-  week,
-  month,
-  sumOfCategoryInToday,
-  sumOfCategoryInYesterday,
-  sumOfCategoryInWeek,
-  sumOfCategoryInMonth,
-  sumOfCategoryInWholeRange,
-  goal,
-  setGoal,
-  addHistory,
-  deleteHistory,
-  showCategory,
-  addCategory,
-  findCategoryIdx
+  reportToday,
+  reportYesterday,
+  reportWeek,
+  reportMonth,
+  summarizeToday,
+  summarizeYesterday,
+  summarizeWeek,
+  summarizeMonth,
+  summarizeTotal,
+  startModify,
+  selectModifyNumber,
+  deleteSelectedHistory,
+  cancelModification
 };
