@@ -3,5 +3,6 @@
 module.exports = {
   empty: 'empty',
   modify: 'modify',
-  modifySelected: 'modifySelected'
+  modifySelected: 'modifySelected',
+  deleteBudget: 'deleteBudget'
 };

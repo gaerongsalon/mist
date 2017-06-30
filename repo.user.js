@@ -17,14 +17,14 @@ const load = id =>
       } else {
         u.state = JSON.parse(u.state);
       }
-      const budget_idx = u.current_budget_idx || 0;
       return Promise.all([
-        budget_idx > 0 ? budget.load(budget_idx) : Promise.resolve(null),
+        budget.load(u.current_budget_idx),
         category.all(id)
       ]).then(res => {
         u.budget = res[0];
         u.categories = res[1];
-        u.currentCurrency = (u.budget ? u.budget.currency : u.currency) || '원';
+        u.currentCurrency =
+          (u.budget.absent ? u.currency : u.budget.currency) || '원';
         u.findCategory = nameOrAlias =>
           category.find(u.categories, nameOrAlias);
         return u;

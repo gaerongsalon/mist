@@ -5,8 +5,9 @@ const db = require('./db');
 const fields = 'h.idx, c.name AS category, h.comment, h.amount, h.registered';
 const sumFields = 'c.name AS category, SUM(h.amount) AS amount';
 
-const from =
-  'history h INNER JOIN category c ON h.id = c.id AND h.category = c.alias';
+const from = `history h
+    INNER JOIN category c ON h.id = c.id AND h.category = c.alias
+    INNER JOIN user u ON h.id = u.id AND h.budget_idx = u.current_budget_idx`;
 const range = {
   today: offset =>
     `(h.registered >= (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR))`,
@@ -72,10 +73,10 @@ const sumOfCategoryInWholeRange = (u, c) =>
     [u.id]
   );
 
-const addHistory = (id, category, comment, amount) =>
+const addHistory = (u, c, comment, amount) =>
   db.query(
-    'INSERT INTO history (id, category, comment, amount) VALUES (?, ?, ?, ?)',
-    [id, category, comment, amount]
+    'INSERT INTO history (id, budget_idx, category, comment, amount, currency) VALUES (?, ?, ?, ?, ?, ?)',
+    [u.id, u.budget.idx, c.idx, comment, amount, u.currentCurrency]
   );
 const deleteHistory = (id, idx) => {
   return db.query('DELETE FROM history WHERE id = ? AND idx = ?', [id, idx]);

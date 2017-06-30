@@ -7,22 +7,33 @@ if (require.main === module) {
 
 const util = require('./util');
 const say = require('./say');
+const states = require('./states');
 const pocket = require('./pocket');
 const user = require('./repo.user');
 const category = require('./repo.category');
 const history = require('./repo.history');
+const budget = require('./repo.budget');
 
-const states = {
-  empty: 'empty',
-  modify: 'modify',
-  modifySelected: 'modifySelected'
-};
 const routes = util.routes(states);
 
-let showCategory = u =>
+const showCategory = u =>
   (u.categories.length == 0
     ? say.categoryHelp
     : util.merge(u.categories.map(e => `[${e.alias}] ${e.name}`)));
+
+const showBudgets = u =>
+  budget
+    .all(u.id)
+    .then(
+      budgets =>
+        (budgets.length == 0
+          ? say.budgetHelp
+          : util.merge(
+              budgets.map(
+                e => `[${e.name}] ${util.withComma(e.amount)}${e.currency}`
+              )
+            ))
+    );
 
 routes[states.empty]
   // greetings
@@ -76,7 +87,7 @@ routes[states.empty]
       const c = u.findCategory(categoryNameOrAlias);
       return c.absent
         ? showCategory(u)
-        : history.addHistory(u.id, c.idx, comment, +amount).then(() => say.yes);
+        : history.addHistory(u, c, comment, +amount).then(() => say.yes);
     }
   )
   .add(/^수정\s*(\d+)?(?:개)?[!]*$/, pocket.startModify);
@@ -94,15 +105,69 @@ routes[states.modifySelected]
   .add(/^(?:ㅇㅇ|지워|삭제)[!]*$/, pocket.deleteSelectedHistory)
   .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => say.modifySelectedHelp);
 
-const parsers = {
-  addBugdet: /^(?:예산)\s*(?:책정)\s*(\d+(?:\.\d+)?)\s*(\w+)?$/,
-  deleteBudget: /^(?:예산)\s*(?:삭제)\s*(\w+)$/,
-  showBudgetStatus: /^(?:예산\s*현황|결산)\s*(\w+)$/,
-  changeBudget: /^(?:예산)\s*(?:설정)\s*(\w+)$/,
-  cancelBudget: /^(?:예산)\s*(?:취소)$/,
-  setDefaultTzOffset: /^(?:기본)\s*(?:시간)\s*(-?[0-9]+)$/,
-  setDefaultCurrency: /^(?:기본)\s*(?:화폐)\s*(\w+)$/
-};
+// budget
+routes[states.empty]
+  .add(/^(?:예산\s*도움말)[!?]?/, () => say.budgetHelp)
+  .add(
+    /^(?:예산)$/,
+    u =>
+      (u.budget.absent
+        ? say.noBudget
+        : history.sumOfCategoryInWholeRange(u, category.empty).then(res => {
+            const totalUsed = res.map(e => e.amount).reduce((a, b) => a + b, 0);
+            const remain = u.budget.amount - totalUsed;
+            return `현재 예산은 [${u.budget.name}] ${u.budget.amount}${u.budget.currency}이고, 남은 금액은 ${remain}${u.budget.currency}입니다.`;
+          }))
+  )
+  .add(/^(?:예산\s*목록)$/, showBudgets)
+  .add(
+    /^(?:예산)\s*(?:설정|책정)\s*(\d+(?:\.\d+)?)\s+(\w+)\s+(.+)$/,
+    (u, amount, currency, name) =>
+      (name
+        ? budget.save(u.id, name.trim(), +amount, currency).then(() => say.yes)
+        : say.budgetHelp)
+  )
+  .add(/^(?:예산)\s*(?:삭제)\s*(.+)$/, (u, name) => {
+    return budget.find(u.id, name).then(b => {
+      if (b.absent) {
+        return say.noBudget;
+      }
+      return user
+        .save(u.id)
+        .state({ name: states.deleteBudget, budget: b })
+        .then(() => {
+          return `예산 [${b.name}]을 정말 삭제할까요? 해당 예산 내의 모든 이력이 삭제됩니다.`;
+        });
+    });
+  })
+  .add(/^(?:예산)\s*(?:취소)$/, (u, name) =>
+    user.save(u.id).budget(0).then(() => `예산 모드를 초기화합니다.`)
+  )
+  .add(/^(?:예산)\s*(?:설정)?\s*(.+)$/, (u, name) =>
+    budget.find(u.id, name).then(b => {
+      if (b.absent) {
+        return say.noBudget;
+      }
+      return user
+        .save(u.id)
+        .budget(b.idx)
+        .then(() => `예산을 [${b.name}]으로 변경합니다.`);
+    })
+  );
+
+routes[states.deleteBudget]
+  .add(/^(?:ㅇㅇ|지워|삭제)[!]*$/, u => {
+    return budget
+      .remove(u.id, u.state.budget.idx)
+      .then(() => user.save(u.id).state({ name: states.empty }))
+      .then(() => say.deleted);
+  })
+  .add(/^(?:ㅂㅂ|ㄴㄴ|아니|취소)[!]*$/, u =>
+    user
+      .save(u.id)
+      .state({ name: states.empty })
+      .then(() => say.modificationCompleted)
+  );
 
 const handle = (id, text) => {
   console.log(`user[${id}] requests a text[${text}]`);

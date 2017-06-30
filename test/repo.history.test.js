@@ -38,25 +38,25 @@ describe('History module', () => {
 
   it('load sum of today', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInToday(u, 0);
+      return history.sumOfCategoryInToday(u, { idx: -1 });
     });
   });
 
   it('load sum of yesterday', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInYesterday(u, 0);
+      return history.sumOfCategoryInYesterday(u, { idx: -1 });
     });
   });
 
   it('load sum of week', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInWeek(u, 0);
+      return history.sumOfCategoryInWeek(u, { idx: -1 });
     });
   });
 
   it('load sum of month', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInMonth(u, 0);
+      return history.sumOfCategoryInMonth(u, { idx: -1 });
     });
   });
 
@@ -64,7 +64,7 @@ describe('History module', () => {
     return user
       .load('test')
       .then(u => {
-        return history.addHistory(u.id, 1, 'something', 10).then(() => {
+        return history.addHistory(u, { idx: 1 }, 'something', 10).then(() => {
           return history.recent(u, 1);
         });
       })
