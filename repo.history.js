@@ -10,7 +10,7 @@ const from = `history h
     INNER JOIN user u ON h.id = u.id AND h.budget_idx = u.current_budget_idx`;
 const range = {
   byDayDiff: (dayDiff, offset) =>
-    `(h.registered BETWEEN (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff + 1} DAY) AND (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff} DAY))`,
+    `(h.registered BETWEEN (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff} DAY) AND (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff - 1} DAY))`,
   byWeekDiff: (weekDiff, offset) =>
     `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${weekDiff} WEEK)) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${weekDiff} WEEK)))`,
   byMonthDiff: (monthDiff, offset) =>
