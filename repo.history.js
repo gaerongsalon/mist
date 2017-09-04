@@ -9,14 +9,12 @@ const from = `history h
     INNER JOIN category c ON h.id = c.id AND h.category = c.idx
     INNER JOIN user u ON h.id = u.id AND h.budget_idx = u.current_budget_idx`;
 const range = {
-  today: offset =>
-    `(h.registered >= (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR))`,
-  yesterday: offset =>
-    `(h.registered BETWEEN (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL 1 DAY) AND (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR))`,
-  week: offset =>
-    `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR)) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR((NOW() - INTERVAL ${offset} HOUR)))`,
-  month: offset =>
-    `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR)) AND MONTH(h.registered)=MONTH((NOW() - INTERVAL ${offset} HOUR)))`
+  byDayDiff: (dayDiff, offset) =>
+    `(h.registered BETWEEN (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff + 1} DAY) AND (DATE(NOW() + INTERVAL ${offset} HOUR) - INTERVAL ${offset} HOUR - INTERVAL ${dayDiff} DAY))`,
+  byWeekDiff: (weekDiff, offset) =>
+    `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${weekDiff} WEEK)) AND WEEKOFYEAR(h.registered)=WEEKOFYEAR((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${weekDiff} WEEK)))`,
+  byMonthDiff: (monthDiff, offset) =>
+    `(YEAR(h.registered)=YEAR((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${monthDiff} MONTH)) AND MONTH(h.registered)=MONTH((NOW() - INTERVAL ${offset} HOUR - INTERVAL ${monthDiff} MONTH)))`
 };
 const categoryWhere = c => `(c.idx = ${c.idx} OR ${c.idx} = -1)`;
 
@@ -26,45 +24,35 @@ const recent = (u, cnt) =>
     [u.id, cnt]
   );
 
-const today = u =>
+const byDayDiff = (u, dayDiff) =>
   db.query(
-    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.today(u.tz)} ORDER BY h.registered ASC`,
+    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.byDayDiff(dayDiff, u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
-const yesterday = u =>
+const byWeekDiff = (u, weekDiff) =>
   db.query(
-    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.yesterday(u.tz)} ORDER BY h.registered ASC`,
+    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.byWeekDiff(weekDiff, u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
-const week = u =>
+const byMonthDiff = (u, monthDiff) =>
   db.query(
-    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.week(u.tz)} ORDER BY h.registered ASC`,
-    [u.id]
-  );
-const month = u =>
-  db.query(
-    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.month(u.tz)} ORDER BY h.registered ASC`,
+    `SELECT ${fields} FROM ${from} WHERE h.id = ? AND ${range.byMonthDiff(monthDiff, u.tz)} ORDER BY h.registered ASC`,
     [u.id]
   );
 
-const sumOfCategoryInToday = (u, c) =>
+const sumOfCategoryByDayDiff = (u, c, dayDiff) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.today(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.byDayDiff(dayDiff, u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-const sumOfCategoryInYesterday = (u, c) =>
+const sumOfCategoryByWeekDiff = (u, c, weekDiff) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.yesterday(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.byWeekDiff(weekDiff, u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
-const sumOfCategoryInWeek = (u, c) =>
+const sumOfCategoryByMonthDiff = (u, c, monthDiff) =>
   db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.week(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
-    [u.id]
-  );
-const sumOfCategoryInMonth = (u, c) =>
-  db.query(
-    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.month(u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
+    `SELECT ${sumFields} FROM ${from} WHERE h.id = ? AND ${range.byMonthDiff(monthDiff, u.tz)} AND ${categoryWhere(c)} GROUP BY c.idx ORDER BY c.idx ASC`,
     [u.id]
   );
 const sumOfCategoryInWholeRange = (u, c) =>
@@ -84,14 +72,12 @@ const deleteHistory = (id, idx) => {
 
 module.exports = {
   recent,
-  today,
-  yesterday,
-  week,
-  month,
-  sumOfCategoryInToday,
-  sumOfCategoryInYesterday,
-  sumOfCategoryInWeek,
-  sumOfCategoryInMonth,
+  byDayDiff,
+  byWeekDiff,
+  byMonthDiff,
+  sumOfCategoryByDayDiff,
+  sumOfCategoryByWeekDiff,
+  sumOfCategoryByMonthDiff,
   sumOfCategoryInWholeRange,
   addHistory,
   deleteHistory

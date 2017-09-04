@@ -25,17 +25,16 @@ const reportHistory = (u, res, days) => {
   return util.merge(texts);
 };
 
-const reportToday = u => {
-  return history.today(u).then(res => reportHistory(u, res, 1));
+const reportByDayDiff = (u, dayDiff) => {
+  return history.byDayDiff(u, dayDiff).then(res => reportHistory(u, res, 1));
 };
-const reportYesterday = u => {
-  return history.yesterday(u).then(res => reportHistory(u, res, 1));
+const reportByWeekDiff = (u, weekDiff) => {
+  return history.byWeekDiff(u, weekDiff).then(res => reportHistory(u, res, 7));
 };
-const reportWeek = u => {
-  return history.week(u).then(res => reportHistory(u, res, 7));
-};
-const reportMonth = u => {
-  return history.month(u).then(res => reportHistory(u, res, 30));
+const reportByMonthDiff = (u, monthDiff) => {
+  return history
+    .byMonthDiff(u, monthDiff)
+    .then(res => reportHistory(u, res, 30));
 };
 
 const reportSummary = (u, res) => {
@@ -49,24 +48,19 @@ const reportSummary = (u, res) => {
 };
 
 // summarize
-const summarizeToday = (u, categoryNameOrAlias) => {
+const summarizeByDayDiff = (u, categoryNameOrAlias, dayDiff) => {
   return history
-    .sumOfCategoryInToday(u, u.findCategory(categoryNameOrAlias))
+    .sumOfCategoryByDayDiff(u, u.findCategory(categoryNameOrAlias), dayDiff)
     .then(res => reportSummary(u, res));
 };
-const summarizeYesterday = (u, categoryNameOrAlias) => {
+const summarizeByWeekDiff = (u, categoryNameOrAlias, weekDiff) => {
   return history
-    .sumOfCategoryInYesterday(u, u.findCategory(categoryNameOrAlias))
+    .sumOfCategoryByWeekDiff(u, u.findCategory(categoryNameOrAlias), weekDiff)
     .then(res => reportSummary(u, res));
 };
-const summarizeWeek = (u, categoryNameOrAlias) => {
+const summarizeByMonthDiff = (u, categoryNameOrAlias, monthDiff) => {
   return history
-    .sumOfCategoryInWeek(u, u.findCategory(categoryNameOrAlias))
-    .then(res => reportSummary(u, res));
-};
-const summarizeMonth = (u, categoryNameOrAlias) => {
-  return history
-    .sumOfCategoryInMonth(u, u.findCategory(categoryNameOrAlias))
+    .sumOfCategoryByMonthDiff(u, u.findCategory(categoryNameOrAlias), monthDiff)
     .then(res => reportSummary(u, res));
 };
 const summarizeTotal = (u, categoryNameOrAlias) => {
@@ -143,14 +137,12 @@ const cancelModification = u => {
 };
 
 module.exports = {
-  reportToday,
-  reportYesterday,
-  reportWeek,
-  reportMonth,
-  summarizeToday,
-  summarizeYesterday,
-  summarizeWeek,
-  summarizeMonth,
+  reportByDayDiff,
+  reportByWeekDiff,
+  reportByMonthDiff,
+  summarizeByDayDiff,
+  summarizeByWeekDiff,
+  summarizeByMonthDiff,
   summarizeTotal,
   startModify,
   selectModifyNumber,

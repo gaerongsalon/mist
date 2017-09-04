@@ -41,15 +41,25 @@ routes[states.empty]
   .add(/^(?:스투핏|스뚜삣|스튜핏).*$/, () => say.stupid)
   .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => say.help)
   // report
-  .add(/^오늘[!]*$/, pocket.reportToday)
-  .add(/^어제[!]*$/, pocket.reportYesterday)
-  .add(/^이번\s*주[!]*$/, pocket.reportWeek)
-  .add(/^이번\s*달[!]*$/, pocket.reportMonth)
+  .add(/^오늘[!]*$/, u => pocket.reportByDayDiff(u, 0))
+  .add(/^어제[!]*$/, u => pocket.reportByDayDiff(u, 1))
+  .add(/^그제[!]*$/, u => pocket.reportByDayDiff(u, 2))
+  .add(/^이번\s*주[!]*$/, u => pocket.reportByWeekDiff(u, 0))
+  .add(/^이번\s*달[!]*$/, u => pocket.reportByMonthDiff(u, 0))
+  .add(/^지난\s*주[!]*$/, u => pocket.reportByWeekDiff(u, 1))
+  .add(/^지난\s*달[!]*$/, u => pocket.reportByMonthDiff(u, 1))
+  .add(/^지지난\s*주[!]*$/, u => pocket.reportByWeekDiff(u, 2))
+  .add(/^지지난\s*달[!]*$/, u => pocket.reportByMonthDiff(u, 2))
   // summary
-  .add(/^(?:누적)\s*(?:오늘)\s*(.*)?$/, pocket.summarizeToday)
-  .add(/^(?:누적)\s*(?:어제)\s*(.*)?$/, pocket.summarizeYesterday)
-  .add(/^(?:누적)\s*(?:이번\s*주)\s*(.*)?$/, pocket.summarizeWeek)
-  .add(/^(?:누적)\s*(?:이번\s*달)\s*(.*)?$/, pocket.summarizeMonth)
+  .add(/^(?:누적)\s*(?:오늘)\s*(.*)?$/, u => pocket.summarizeByDayDiff(u, 0))
+  .add(/^(?:누적)\s*(?:어제)\s*(.*)?$/, u => pocket.summarizeByDayDiff(u, 1))
+  .add(/^(?:누적)\s*(?:그제)\s*(.*)?$/, u => pocket.summarizeByDayDiff(u, 2))
+  .add(/^(?:누적)\s*(?:이번\s*주)\s*(.*)?$/, u => pocket.summarizeByWeekDiff(u, 0))
+  .add(/^(?:누적)\s*(?:이번\s*달)\s*(.*)?$/, u => pocket.summarizeByMonthDiff(u, 0))
+  .add(/^(?:누적)\s*(?:지난\s*주)\s*(.*)?$/, u => pocket.summarizeByWeekDiff(u, 1))
+  .add(/^(?:누적)\s*(?:지난\s*달)\s*(.*)?$/, u => pocket.summarizeByMonthDiff(u, 1))
+  .add(/^(?:누적)\s*(?:지지난\s*주)\s*(.*)?$/, u => pocket.summarizeByWeekDiff(u, 2))
+  .add(/^(?:누적)\s*(?:지지난\s*달)\s*(.*)?$/, u => pocket.summarizeByMonthDiff(u, 2))
   .add(/^(?:누적)\s*(?:전체)?\s*(.*)?$/, pocket.summarizeTotal)
   // property
   .add(/^(?:용돈|목표)\s*(\d+(?:\.\d+)?)(?:\w+)?[!]*$/, (u, amount) =>
@@ -177,15 +187,14 @@ const handle = (id, text) => {
     }
     const cmd = (text || '').trim();
     const state = u.state && u.state.name ? u.state.name : states.empty;
-    return routes[state].run(cmd, [u])
-      .then(result => {
-        if (process.env.NODE_ENV !== 'test') {
-          console.log(
-            `result of cmd[${cmd}] in user[${u.id}]'s state[${state}] is result[${JSON.stringify(result)}]`
-          );
-        }
-        return result;
-      });
+    return routes[state].run(cmd, [u]).then(result => {
+      if (process.env.NODE_ENV !== 'test') {
+        console.log(
+          `result of cmd[${cmd}] in user[${u.id}]'s state[${state}] is result[${JSON.stringify(result)}]`
+        );
+      }
+      return result;
+    });
   });
 };
 

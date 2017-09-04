@@ -14,49 +14,49 @@ describe('History module', () => {
 
   it('load today', () => {
     return user.load('test').then(u => {
-      return history.today(u);
+      return history.byDayDiff(u, 0);
     });
   });
 
   it('load yesterday', () => {
     return user.load('test').then(u => {
-      return history.yesterday(u);
+      return history.byDayDiff(u, 1);
     });
   });
 
   it('load week', () => {
     return user.load('test').then(u => {
-      return history.week(u);
+      return history.byWeekDiff(u, 0);
     });
   });
 
   it('load month', () => {
     return user.load('test').then(u => {
-      return history.month(u);
+      return history.byMonthDiff(u, 0);
     });
   });
 
   it('load sum of today', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInToday(u, { idx: -1 });
+      return history.sumOfCategoryByDayDiff(u, { idx: -1 }, 0);
     });
   });
 
   it('load sum of yesterday', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInYesterday(u, { idx: -1 });
+      return history.sumOfCategoryByDayDiff(u, { idx: -1 }, 1);
     });
   });
 
   it('load sum of week', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInWeek(u, { idx: -1 });
+      return history.sumOfCategoryByWeekDiff(u, { idx: -1 }, 0);
     });
   });
 
   it('load sum of month', () => {
     return user.load('test').then(u => {
-      return history.sumOfCategoryInMonth(u, { idx: -1 });
+      return history.sumOfCategoryByMonthDiff(u, { idx: -1 }, 0);
     });
   });
 
@@ -64,9 +64,11 @@ describe('History module', () => {
     return user
       .load('test')
       .then(u => {
-        return history.addHistory(u, { idx: 1 }, 'something', 10).then(() => {
-          return history.recent(u, 1);
-        });
+        return history
+          .addHistory(u, { idx: u.categories[0].idx }, 'something', 10)
+          .then(() => {
+            return history.recent(u, 1);
+          });
       })
       .then(h => {
         assert.equal(h.length, 1);
