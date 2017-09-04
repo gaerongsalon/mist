@@ -51,22 +51,22 @@ routes[states.empty]
   .add(/^지지난\s*주[!]*$/, u => pocket.reportByWeekDiff(u, 2))
   .add(/^지지난\s*달[!]*$/, u => pocket.reportByMonthDiff(u, 2))
   // summary
-  .add(/^(?:누적)\s*(?:오늘)\s*(?:.*)?$/, u => pocket.summarizeByDayDiff(u, 0))
-  .add(/^(?:누적)\s*(?:어제)\s*(?:.*)?$/, u => pocket.summarizeByDayDiff(u, 1))
-  .add(/^(?:누적)\s*(?:그제)\s*(?:.*)?$/, u => pocket.summarizeByDayDiff(u, 2))
-  .add(/^(?:누적)\s*(?:이번\s*주)\s*(?:.*)?$/, u => pocket.summarizeByWeekDiff(u, 0))
-  .add(/^(?:누적)\s*(?:이번\s*달)\s*(?:.*)?$/, u =>
-    pocket.summarizeByMonthDiff(u, 0)
+  .add(/^(?:누적)\s*(?:오늘)\s*(.*)?$/, (u, c) => pocket.summarizeByDayDiff(u, c, 0))
+  .add(/^(?:누적)\s*(?:어제)\s*(.*)?$/, (u, c) => pocket.summarizeByDayDiff(u, c, 1))
+  .add(/^(?:누적)\s*(?:그제)\s*(.*)?$/, (u, c) => pocket.summarizeByDayDiff(u, c, 2))
+  .add(/^(?:누적)\s*(?:이번\s*주)\s*(.*)?$/, (u, c) => pocket.summarizeByWeekDiff(u, c, 0))
+  .add(/^(?:누적)\s*(?:이번\s*달)\s*(.*)?$/, (u, c) =>
+    pocket.summarizeByMonthDiff(u, c, 0)
   )
-  .add(/^(?:누적)\s*(?:지난\s*주)\s*(?:.*)?$/, u => pocket.summarizeByWeekDiff(u, 1))
-  .add(/^(?:누적)\s*(?:지난\s*달)\s*(?:.*)?$/, u =>
-    pocket.summarizeByMonthDiff(u, 1)
+  .add(/^(?:누적)\s*(?:지난\s*주)\s*(.*)?$/, (u, c) => pocket.summarizeByWeekDiff(u, c, 1))
+  .add(/^(?:누적)\s*(?:지난\s*달)\s*(.*)?$/, (u, c) =>
+    pocket.summarizeByMonthDiff(u, c, 1)
   )
-  .add(/^(?:누적)\s*(?:지지난\s*주)\s*(?:.*)?$/, u =>
-    pocket.summarizeByWeekDiff(u, 2)
+  .add(/^(?:누적)\s*(?:지지난\s*주)\s*(.*)?$/, (u, c) =>
+    pocket.summarizeByWeekDiff(u, c, 2)
   )
-  .add(/^(?:누적)\s*(?:지지난\s*달)\s*(?:.*)?$/, u =>
-    pocket.summarizeByMonthDiff(u, 2)
+  .add(/^(?:누적)\s*(?:지지난\s*달)\s*(.*)?$/, (u, c) =>
+    pocket.summarizeByMonthDiff(u, c, 2)
   )
   .add(/^(?:누적)\s*(?:전체)?\s*(?:.*)?$/, pocket.summarizeTotal)
   // property

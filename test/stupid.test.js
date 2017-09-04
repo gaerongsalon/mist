@@ -87,4 +87,14 @@ describe('Stupid module', () => {
       });
     return act();
   });
+
+  it('summarize today', () => {
+    return stupid.handle('atest', '1 pizza 342.12').then(msg => {
+      console.log(msg);
+      return stupid.handle('atest', '누적 오늘').then(msg => {
+        console.log(msg);
+        assert.notEqual(msg, null);
+      });
+    });
+  });
 });
