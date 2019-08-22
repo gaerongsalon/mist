@@ -1,22 +1,46 @@
 service: stupid
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-prune-plugin
+
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs10.x
   stage: production
   region: ap-northeast-2
+  tracing:
+    apiGateway: true
+    lambda: true
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:PutObject'
+        - 's3:PutObjectAcl'
+        - 's3:GetObject'
+        - 's3:GetObjectAcl'
+        - 's3:DeleteObject'
+      Resource:
+        - 'arn:aws:s3:::${env:BUCKET_NAME}/*'
 
 functions:
   express:
     handler: handler.express
-    environment:
-      CHANNEL_SECRET: ${env:CHANNEL_SECRET}
-      CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
-      DB_HOST: ${env:DB_HOST}
-      DB_PASSWORD: ${env:DB_PASSWORD}
-      DB_ID: ${env:DB_ID}
-      DB_NAME: ${env:DB_NAME}
     events:
       - http:
           path: webhook
           method: post
-
+functions:
+  webhook:
+    handler: src/index.webhook
+    memorySize: 256
+    timeout: 10
+    environment:
+      CHANNEL_SECRET: ${env:CHANNEL_SECRET}
+      CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
+      BUCKET_NAME: ${env:BUCKET_NAME}
+    events:
+      - http:
+          path: webhook
+          method: post

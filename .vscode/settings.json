@@ -1,6 +1,13 @@
-// Place your settings in this file to overwrite default and user settings.
 {
-    "prettier.singleQuote": true,
-    "editor.formatOnSave": true,
-    "editor.tabSize": 2
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.tslint": true
+  },
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.serverless": true,
+    "**/.webpack": true
+  }
 }
