@@ -12,7 +12,7 @@ const debugRoute = (text: string) =>
 beforeEach(async () => {
   while (true) {
     const list = await debugRoute("수정");
-    if (list === says.noHistory) {
+    if (list === says.noHistory()) {
       await debugRoute("ㅂㅂ");
       break;
     }
@@ -80,5 +80,5 @@ test("add two", async () => {
   await debugRoute("1 pizza 342.12");
   const result = await debugRoute("누적 오늘");
   expect(result).toBeDefined();
-  expect(result![0]).toContain("684.24");
+  expect(result).toContain("684.24");
 });

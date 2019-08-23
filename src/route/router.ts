@@ -1,9 +1,6 @@
 import { UserEO, UserStateName } from "../repository";
 
-type Handler = (
-  user: UserEO,
-  ...args: string[]
-) => string | string[] | Promise<string | string[]>;
+type Handler = (user: UserEO, ...args: string[]) => string | Promise<string>;
 
 interface IRoute {
   regex: RegExp;

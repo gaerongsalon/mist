@@ -6,7 +6,7 @@ import { CategoryEO } from "./category";
 import { HistoryEO } from "./history";
 import { UserStateEO } from "./userState";
 
-const defaultCurrency = "원";
+const defaultCurrency = `원`;
 
 export class UserEO {
   public readonly budget: BudgetEO;

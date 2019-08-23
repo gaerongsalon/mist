@@ -1,6 +1,7 @@
 import * as line from "@line/bot-sdk";
 import * as awsTypes from "aws-lambda";
 import route from "./route";
+import { alignTextLines } from "./utils/text";
 
 const lineConfig = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN!,
@@ -62,16 +63,15 @@ export const webhook = async (gatewayEvent: awsTypes.APIGatewayEvent) => {
 
 const handleEvent = async (
   id: string,
-  text: string,
+  requestText: string,
   reply: (texts: string[]) => Promise<any>
 ) => {
   try {
-    const result = await route(id, text);
-    if (result === null) {
+    const responseText = await route(id, requestText);
+    if (responseText === null) {
       return;
     }
-    const texts = typeof result === "string" ? [result] : result;
-    await reply(texts);
+    await reply(alignTextLines(responseText.split(/\n/)));
   } catch (error) {
     console.error(`LogicError`, error);
   }

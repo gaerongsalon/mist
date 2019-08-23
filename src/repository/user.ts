@@ -49,7 +49,7 @@ export const deepCopyUser = (value: IUser) => ({
 const newUser = (id: string): IUser => ({
   id,
   goal: 0,
-  currency: "원",
+  currency: `원`,
   timezoneOffset: 9,
   currentBudgetIndex: -1,
   state: undefined,

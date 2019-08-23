@@ -1,7 +1,6 @@
 import { UserEO, UserStateName } from "../repository";
 import says from "../says";
 import { periodToDays, PeriodType } from "../utils/period";
-import { alignTextLines, withComma } from "../utils/text";
 import { PartialRouteMap, Router } from "./router";
 
 const reportHistory = async (eo: UserEO, type: PeriodType, ago: number) => {
@@ -9,24 +8,24 @@ const reportHistory = async (eo: UserEO, type: PeriodType, ago: number) => {
   const totalUsed = histories.map(e => e.amount).reduce((a, b) => a + b, 0);
   const remain = eo.value.goal * periodToDays(type, 1) - totalUsed;
 
-  const userCurrency = eo.userCurrency;
+  const { userCurrency } = eo;
   const texts = [
-    ...histories.map(
-      e =>
-        `[${eo.category.findNameByIndex(e.categoryIndex)}] ${
-          e.comment
-        } ${withComma(e.amount)}${eo.getCurrency(e.budgetIndex)}`
+    ...histories.map(e =>
+      says.reportHistoryItem({
+        categoryName: eo.category.findNameByIndex(e.categoryIndex),
+        comment: e.comment,
+        amount: e.amount,
+        currency: eo.getCurrency(e.budgetIndex)
+      })
     ),
-    `총 ${withComma(totalUsed)}${userCurrency} 사용했고, ${withComma(
-      remain
-    )}${userCurrency} 남았습니다.`
+    says.reportHistoryEnd({ totalUsed, remain, currency: userCurrency })
   ];
   if (remain < 0) {
-    texts.push(says.superStupid);
+    texts.push(says.superWarning());
   } else if (remain < eo.value.goal / 4) {
-    texts.push(says.stupid);
+    texts.push(says.warning());
   }
-  return alignTextLines(texts);
+  return texts.join("\n");
 };
 
 const reportSummary = async (
@@ -42,16 +41,17 @@ const reportSummary = async (
     ago
   });
   const totalUsed = aggregated.map(e => e.amount).reduce((a, b) => a + b, 0);
-  const userCurrency = eo.userCurrency;
-  return alignTextLines([
-    ...aggregated.map(
-      e =>
-        `[${eo.category.findNameByIndex(e.categoryIndex)}] ${withComma(
-          e.amount
-        )}${userCurrency}`
+  const { userCurrency } = eo;
+  return [
+    ...aggregated.map(e =>
+      says.reportSummaryItem({
+        categoryName: eo.category.findNameByIndex(e.categoryIndex),
+        amount: e.amount,
+        currency: userCurrency
+      })
     ),
-    `총 ${withComma(totalUsed)}${userCurrency} 사용했습니다.`
-  ]);
+    says.reportSummaryEnd({ totalUsed, currency: userCurrency })
+  ].join("\n");
 };
 
 const routes: PartialRouteMap = {
