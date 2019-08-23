@@ -1,85 +1,7 @@
-import { withComma } from "./utils/text";
+import { withComma } from "../utils/text";
+import { Messages } from "./messages";
 
-type Messages = {
-  yes: void;
-  hello: void;
-  warning: void;
-  superWarning: void;
-  pleaseNumber: void;
-  noHistory: void;
-  retryModify: void;
-  deleted: void;
-  modificationCompleted: void;
-  modifyHelp: void;
-  modifySelectedHelp: void;
-  help: void;
-  goalHelp: void;
-  categoryHelp: void;
-  sumOfCategory: void;
-  budgetHelp: void;
-  noBudget: void;
-  currentBudget: {
-    name: string;
-    amount: number;
-    remain: number;
-    currency: string;
-  };
-  budgetListItem: {
-    name: string;
-    amount: number;
-    currency: string;
-  };
-  confirmDeleteBudget: {
-    name: string;
-  };
-  resetBudget: void;
-  changeBudget: {
-    name: string;
-  };
-  categoryListItem: {
-    name: string;
-    alias: string;
-  };
-  historyListItem: {
-    index: number;
-    categoryName: string;
-    comment: string;
-    amount: number;
-    currency: string;
-  };
-  reportHistoryItem: {
-    categoryName: string;
-    comment: string;
-    amount: number;
-    currency: string;
-  };
-  reportHistoryEnd: {
-    totalUsed: number;
-    remain: number;
-    currency: string;
-  };
-  reportSummaryItem: {
-    categoryName: string;
-    amount: number;
-    currency: string;
-  };
-  reportSummaryEnd: {
-    totalUsed: number;
-    currency: string;
-  };
-  getsetGoal: {
-    goal: number;
-    currency: string;
-  };
-  getsetTimezone: {
-    timezoneOffset: number;
-  };
-  getsetCurrency: {
-    currency: string;
-  };
-};
-
-const says: { [K in keyof Messages]: (args: Messages[K]) => string } = {
+const messages: { [K in keyof Messages]: (args: Messages[K]) => string } = {
   yes: () => `네!`,
   hello: () => `안녕하세요!`,
   warning: () => `삐뽀!삐뽀!`,
@@ -113,7 +35,7 @@ const says: { [K in keyof Messages]: (args: Messages[K]) => string } = {
     `예산 [${name}]을 정말 삭제할까요? 해당 예산 내의 모든 이력이 삭제됩니다.`,
   resetBudget: () => `예산 모드를 초기화합니다.`,
   changeBudget: ({ name }) => `예산을 [${name}]으로 변경합니다.`,
-  categoryListItem: ({ name, alias }) => `[${alias}] ${name}}`,
+  categoryListItem: ({ name, alias }) => `[${alias}] ${name}`,
   historyListItem: ({ index, categoryName, comment, amount, currency }) =>
     `[${index}] (${categoryName}) ${comment} ${withComma(amount)}${currency}`,
   reportHistoryItem: ({ categoryName, comment, amount, currency }) =>
@@ -133,4 +55,4 @@ const says: { [K in keyof Messages]: (args: Messages[K]) => string } = {
   getsetCurrency: ({ currency }) => `현재 설정된 기본 화폐는 ${currency}입니다.`
 };
 
-export default says;
+export default messages;
