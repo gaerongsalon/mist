@@ -75,4 +75,9 @@ export type Messages = {
   getsetCurrency: {
     currency: string;
   };
+  guideSeparator: void;
+};
+
+export type MessagesMap = {
+  [K in keyof Messages]: (args: Messages[K]) => string;
 };

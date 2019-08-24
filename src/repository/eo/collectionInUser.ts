@@ -38,6 +38,18 @@ export class CollectionInUser<T extends IIndexTuple> {
     this.elements.push(newTuple);
   }
 
+  public update(index: number, fields: Partial<Omit<T, "index">>) {
+    const arrayIndex = this.elements.findIndex(each => each.index === index);
+    if (arrayIndex < 0) {
+      return false;
+    }
+    this.user[this.name][arrayIndex] = {
+      ...this.user[this.name][arrayIndex],
+      ...fields
+    };
+    return true;
+  }
+
   public remove(index: number) {
     this.removeWhere(filterByIndex(index));
   }

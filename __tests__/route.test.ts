@@ -95,9 +95,9 @@ test("delete all history", async () => {
       break;
     }
     await debugRoute("1");
-    await debugRoute("ㅇㅇ");
+    await debugRoute("지워");
   }
-});
+}, 1000);
 
 test("add two category", async () => {
   await debugRoute("분류 1 식사 추가");
@@ -106,4 +106,14 @@ test("add two category", async () => {
   await debugRoute("2 taxi 11");
   expect(await debugRoute("누적 오늘 식사")).toContain("34.2");
   expect(await debugRoute("누적 오늘 교통")).toContain("11");
+});
+
+test("modify history", async () => {
+  await debugRoute("분류 1 식사 추가");
+  await debugRoute("1 pizza 34.2");
+  expect(await debugRoute("오늘 식사")).toContain("34.2");
+  await debugRoute("수정");
+  await debugRoute("1");
+  await debugRoute("1 pasta 14.8");
+  expect(await debugRoute("오늘 식사")).toContain("14.8");
 });

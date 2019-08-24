@@ -20,7 +20,7 @@ export class HistoryEO extends CollectionInUser<IHistory> {
       .filter(takeN(cond.count || 10));
   }
 
-  public findPast(cond: IPeriodCondition) {
+  public findPast(cond: IPeriodCondition & ICategoryCondition) {
     const dateFilter =
       cond.type !== undefined
         ? dateBetween(this.user.timezoneOffset)[cond.type](cond.ago || 0)
@@ -30,6 +30,7 @@ export class HistoryEO extends CollectionInUser<IHistory> {
         budgetIndex: this.user.currentBudgetIndex
       })
     )
+      .filter(categoryFilter(cond))
       .filter(each => dateFilter(each.registered))
       .sort(ascByRegistered);
   }

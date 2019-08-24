@@ -3,6 +3,29 @@ import { UserEO } from "../repository/eo/user";
 import says from "../says";
 import { PartialRouteMap, Router } from "./router";
 
+const addHistory = async (
+  eo: UserEO,
+  maybeCategoryNameOrAlias: string,
+  amount: number,
+  comment: string
+) => {
+  const category = eo.category.findByNameOrAlias(maybeCategoryNameOrAlias);
+  if (!category) {
+    return eo.category.elements.length === 0
+      ? says.categoryHelp()
+      : eo.category.elements.map(says.categoryListItem).join("\n");
+  }
+  eo.history.add({
+    categoryIndex: category.index,
+    budgetIndex: eo.value.currentBudgetIndex,
+    amount,
+    comment,
+    currency: eo.userCurrency,
+    registered: new Date().toISOString()
+  });
+  return says.yes();
+};
+
 const startModifyHistory = async (eo: UserEO, count: number) => {
   const recent = eo.history.findRecent({ count });
   if (recent.length === 0) {
@@ -25,7 +48,11 @@ const startModifyHistory = async (eo: UserEO, count: number) => {
   });
   eo.state.set({ name: UserStateName.modify, data });
   await eo.store();
-  return data.map(e => e.text).join("\n");
+  return [
+    says.modifyHelp(),
+    says.guideSeparator(),
+    ...data.map(e => e.text)
+  ].join("\n");
 };
 
 const selectModifyHistoryIndex = async (eo: UserEO, selected: number) => {
@@ -49,10 +76,17 @@ const selectModifyHistoryIndex = async (eo: UserEO, selected: number) => {
     data: userState.data,
     selectedIndex: targetIndex
   });
-  return userState.data[targetIndex].text;
+  return [
+    says.modifySelectedHelp(),
+    says.guideSeparator(),
+    userState.data[targetIndex].text
+  ].join("\n");
 };
 
-const deleteSelectedHistory = async (eo: UserEO) => {
+const modifySelectedHistory = async (
+  eo: UserEO,
+  callback: (historyIndex: number) => string
+) => {
   const userState = eo.state.get();
   if (userState.name !== UserStateName.modifySelected) {
     console.error(`Invalid state`, userState);
@@ -65,11 +99,38 @@ const deleteSelectedHistory = async (eo: UserEO) => {
   }
   const target = userState.data[userState.selectedIndex];
   eo.state.reset();
-  if (target) {
-    eo.history.remove(target.index);
+  if (!target) {
+    return says.retryModify();
   }
-  return target ? says.deleted() : says.retryModify();
+  return callback(target.index);
 };
+
+const deleteSelectedHistory = async (eo: UserEO) =>
+  modifySelectedHistory(eo, index => {
+    eo.history.remove(index);
+    return says.deleted();
+  });
+
+const updateHistory = async (
+  eo: UserEO,
+  maybeCategoryNameOrAlias: string,
+  amount: number,
+  comment: string
+) =>
+  modifySelectedHistory(eo, index => {
+    const category = eo.category.findByNameOrAlias(maybeCategoryNameOrAlias);
+    if (!category) {
+      return eo.category.elements.length === 0
+        ? says.categoryHelp()
+        : eo.category.elements.map(says.categoryListItem).join("\n");
+    }
+    eo.history.update(index, {
+      categoryIndex: category.index,
+      amount,
+      comment
+    });
+    return says.yes();
+  });
 
 const cancelHisotryModification = async (eo: UserEO) => {
   eo.state.reset();
@@ -80,27 +141,13 @@ const routes: PartialRouteMap = {
   [UserStateName.empty]: new Router()
     .add(
       /^([\d\w]+)\s*(.+)\s+(\d+(?:\.\d+)?)(?:\w+)?[!]*$/,
-      (eo, maybeCategoryNameOrAlias, maybeComment, maybeAmount) => {
-        const comment = (maybeComment || "").trim();
-        const amount = +(maybeAmount || "");
-        const category = eo.category.findByNameOrAlias(
-          maybeCategoryNameOrAlias
-        );
-        if (!category) {
-          return eo.category.elements.length === 0
-            ? says.categoryHelp()
-            : eo.category.elements.map(says.categoryListItem).join("\n");
-        }
-        eo.history.add({
-          categoryIndex: category.index,
-          budgetIndex: eo.value.currentBudgetIndex,
-          amount,
-          comment,
-          currency: eo.userCurrency,
-          registered: new Date().toISOString()
-        });
-        return says.yes();
-      }
+      (eo, maybeCategoryNameOrAlias, maybeComment, maybeAmount) =>
+        addHistory(
+          eo,
+          maybeCategoryNameOrAlias,
+          +(maybeAmount || ""),
+          (maybeComment || "").trim()
+        )
     )
     .add(/^수정\s*(\d+)?(?:개)?[!]*$/, (eo, maybeCount) =>
       startModifyHistory(eo, +maybeCount)
@@ -122,7 +169,17 @@ const routes: PartialRouteMap = {
       selectModifyHistoryIndex(eo, +maybeIndex)
     )
     .add(/^(?:ㅂㅂ|그만|취소)[!]*$/, cancelHisotryModification)
-    .add(/^(?:ㅇㅇ|지워|삭제)[!]*$/, deleteSelectedHistory)
+    .add(/^(?:지워|삭제)[!]*$/, deleteSelectedHistory)
+    .add(
+      /^([\d\w]+)\s*(.+)\s+(\d+(?:\.\d+)?)(?:\w+)?[!]*$/,
+      (eo, maybeCategoryNameOrAlias, maybeComment, maybeAmount) =>
+        updateHistory(
+          eo,
+          maybeCategoryNameOrAlias,
+          +(maybeAmount || ""),
+          (maybeComment || "").trim()
+        )
+    )
     .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => says.modifySelectedHelp())
 };
 

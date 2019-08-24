@@ -1,7 +1,6 @@
 import * as line from "@line/bot-sdk";
 import { ConsoleLogger } from "@yingyeothon/logger";
 import * as awsTypes from "aws-lambda";
-import { alignTextLines } from "./text";
 
 const logger = new ConsoleLogger("info");
 
@@ -63,7 +62,7 @@ export const installWebhook = (handler: CommandHandler) => async (
 };
 
 export const reply = (replyToken: string, response: string) => {
-  const texts = alignTextLines(response.split("\n"));
+  const texts = splitResponseByProperLength(response);
   return lineClient.replyMessage(
     replyToken,
     texts.map(text => ({
@@ -71,4 +70,25 @@ export const reply = (replyToken: string, response: string) => {
       text
     }))
   );
+};
+
+const splitResponseByProperLength = (response: string) => {
+  const maxLength = 1900;
+  const result: string[] = [];
+
+  let length = 0;
+  let buffer: string[] = [];
+  for (const text of response.split(/\n/)) {
+    if (length > 0 && length + text.length > maxLength) {
+      result.push(buffer.join("\n"));
+      buffer = [];
+      length = 0;
+    }
+    buffer.push(text);
+    length += text.length;
+  }
+  if (buffer.length > 0) {
+    result.push(buffer.join("\n"));
+  }
+  return result;
 };
