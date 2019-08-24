@@ -1,22 +1,51 @@
-service: stupid
+service: mist
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-prune-plugin
+
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs10.x
   stage: production
   region: ap-northeast-2
+  tracing:
+    apiGateway: true
+    lambda: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+        - "s3:PutObjectAcl"
+        - "s3:GetObject"
+        - "s3:GetObjectAcl"
+        - "s3:DeleteObject"
+      Resource:
+        - "arn:aws:s3:::${env:BUCKET_NAME}/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource:
+        - "arn:aws:s3:::${env:BUCKET_NAME}"
+
+custom:
+  prune:
+    automatic: true
+    number: 7
 
 functions:
-  express:
-    handler: handler.express
+  webhook:
+    handler: src/handler.webhook
+    memorySize: 256
+    timeout: 30
     environment:
       CHANNEL_SECRET: ${env:CHANNEL_SECRET}
       CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
-      DB_HOST: ${env:DB_HOST}
-      DB_PASSWORD: ${env:DB_PASSWORD}
-      DB_ID: ${env:DB_ID}
-      DB_NAME: ${env:DB_NAME}
+      BUCKET_NAME: ${env:BUCKET_NAME}
+      REDIS_HOST: ${env:REDIS_HOST}
+      REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     events:
       - http:
           path: webhook
           method: post
-

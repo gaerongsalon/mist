@@ -4,8 +4,8 @@ jspm_packages
 
 # Serverless directories
 .serverless
+.webpack
 
 # misc
-.env
+.envrc
 *.swp
-package-lock.json
