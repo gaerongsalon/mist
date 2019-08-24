@@ -1,17 +1,21 @@
 import { UserRepository } from "../src/repository";
-import route from "../src/route";
+import routes from "../src/route";
 import says from "../src/says";
 
 const userId = "__tests__";
+const repo = new UserRepository(userId);
 
-const debugRoute = (text: string) =>
-  route(userId, text).then(result => {
-    console.log(result);
-    return result;
-  });
+const debugRoute = async (text: string) => {
+  const eo = await repo.eo();
+  const state = eo.state.get();
+  const result = await routes[state.name].run(text, eo);
+  console.log(result);
+  await eo.store();
+  return result;
+};
 
 beforeEach(async () => {
-  await new UserRepository(userId).delete();
+  await repo.delete();
 });
 
 test("says hello", async () => {

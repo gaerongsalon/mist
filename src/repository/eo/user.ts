@@ -1,3 +1,4 @@
+import { ConsoleLogger } from "@yingyeothon/logger";
 import { deepEqual } from "fast-equals";
 import { IUser } from "..";
 import { deepCopyUser } from "../user";
@@ -5,7 +6,6 @@ import { BudgetEO } from "./budget";
 import { CategoryEO } from "./category";
 import { HistoryEO } from "./history";
 import { UserStateEO } from "./userState";
-import { ConsoleLogger } from "@yingyeothon/logger";
 
 const logger = new ConsoleLogger("debug");
 const defaultCurrency = `원`;

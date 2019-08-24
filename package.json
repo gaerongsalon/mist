@@ -8,11 +8,16 @@
   },
   "dependencies": {
     "@line/bot-sdk": "^6.8.2",
+    "@types/ioredis": "^4.0.15",
     "@types/luxon": "^1.15.2",
+    "@yingyeothon/actor-system": "^0.1.8",
+    "@yingyeothon/actor-system-aws-lambda-support": "^0.1.6",
+    "@yingyeothon/actor-system-redis-support": "^0.1.3",
     "@yingyeothon/logger": "^0.1.0",
     "@yingyeothon/repository": "^0.1.3",
     "@yingyeothon/repository-s3": "^0.1.3",
     "fast-equals": "^2.0.0",
+    "ioredis": "^4.14.0",
     "luxon": "^1.17.2",
     "mem": "^5.1.1"
   },

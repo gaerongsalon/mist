@@ -38,11 +38,13 @@ functions:
   webhook:
     handler: src/handler.webhook
     memorySize: 256
-    timeout: 10
+    timeout: 30
     environment:
       CHANNEL_SECRET: ${env:CHANNEL_SECRET}
       CHANNEL_ACCESS_TOKEN: ${env:CHANNEL_ACCESS_TOKEN}
       BUCKET_NAME: ${env:BUCKET_NAME}
+      REDIS_HOST: ${env:REDIS_HOST}
+      REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     events:
       - http:
           path: webhook
