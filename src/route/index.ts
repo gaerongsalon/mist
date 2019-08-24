@@ -6,7 +6,9 @@ import history from "./history";
 import report from "./report";
 import { mergeRoutes, RouteMap, Router } from "./router";
 import setting from "./setting";
+import { ConsoleLogger } from "@yingyeothon/logger";
 
+const logger = new ConsoleLogger("info");
 const routes: RouteMap = mergeRoutes(
   {
     [UserStateName.empty]: new Router(),
@@ -23,25 +25,20 @@ const routes: RouteMap = mergeRoutes(
 );
 
 const route = async (userId: string, text: string) => {
-  console.log(`user[${userId}] requests a text[${text}]`);
+  logger.info(`user[${userId}] requests a text[${text}]`);
   const repository = new UserRepository(userId);
   const eo = await repository.eo();
-  if (process.env.NODE_ENV !== "test") {
-    console.log(`current user is ${JSON.stringify(eo.value)}`);
-  }
 
   const userState = eo.state.get();
   const cmd = (text || "").trim();
   try {
-    console.log(`Handle text[${text}] on user[${JSON.stringify(eo.value)}]`);
+    logger.debug(`Handle text[${text}] on user[${JSON.stringify(eo.value)}]`);
     const result = await routes[userState.name].run(cmd, eo);
-    // if (process.env.NODE_ENV !== "test") {
-    console.log(
+    logger.debug(
       `result of cmd[${cmd}] in user[${userId}]'s state[${JSON.stringify(
         userState
       )}] is result[${JSON.stringify(result)}]`
     );
-    // }
     return result;
   } finally {
     await eo.store();

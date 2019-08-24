@@ -1,4 +1,4 @@
-service: stupid
+service: mist
 
 plugins:
   - serverless-webpack
@@ -14,26 +14,29 @@ provider:
     apiGateway: true
     lambda: true
   iamRoleStatements:
-    - Effect: 'Allow'
+    - Effect: "Allow"
       Action:
-        - 's3:PutObject'
-        - 's3:PutObjectAcl'
-        - 's3:GetObject'
-        - 's3:GetObjectAcl'
-        - 's3:DeleteObject'
+        - "s3:PutObject"
+        - "s3:PutObjectAcl"
+        - "s3:GetObject"
+        - "s3:GetObjectAcl"
+        - "s3:DeleteObject"
       Resource:
-        - 'arn:aws:s3:::${env:BUCKET_NAME}/*'
+        - "arn:aws:s3:::${env:BUCKET_NAME}/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource:
+        - "arn:aws:s3:::${env:BUCKET_NAME}"
+
+custom:
+  prune:
+    automatic: true
+    number: 7
 
 functions:
-  express:
-    handler: handler.express
-    events:
-      - http:
-          path: webhook
-          method: post
-functions:
   webhook:
-    handler: src/index.webhook
+    handler: src/handler.webhook
     memorySize: 256
     timeout: 10
     environment:

@@ -5,7 +5,7 @@ export abstract class SimpleGetSetRepository<T> {
   protected readonly internal: IRepository;
 
   constructor(private readonly prefix: string, protected readonly id: string) {
-    this.internal = newInternalRepository(`stupid/${id}`);
+    this.internal = newInternalRepository(`mist/${id}/`);
   }
 
   public async get() {
@@ -14,5 +14,9 @@ export abstract class SimpleGetSetRepository<T> {
 
   public async set(value: T) {
     return this.internal.set<T>(this.prefix, value);
+  }
+
+  public async delete() {
+    return this.internal.delete(this.prefix);
   }
 }

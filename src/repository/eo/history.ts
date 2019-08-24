@@ -21,9 +21,10 @@ export class HistoryEO extends CollectionInUser<IHistory> {
   }
 
   public findPast(cond: IPeriodCondition) {
-    const dateFilter = cond.type
-      ? dateBetween(this.user.timezoneOffset)[cond.type](cond.ago || 0)
-      : () => true;
+    const dateFilter =
+      cond.type !== undefined
+        ? dateBetween(this.user.timezoneOffset)[cond.type](cond.ago || 0)
+        : () => true;
     return this.filter(
       fromCondition({
         budgetIndex: this.user.currentBudgetIndex
@@ -34,9 +35,10 @@ export class HistoryEO extends CollectionInUser<IHistory> {
   }
 
   public aggregatePast(cond: IPeriodCondition & ICategoryCondition) {
-    const dateFilter = cond.type
-      ? dateBetween(this.user.timezoneOffset)[cond.type](cond.ago || 0)
-      : () => true;
+    const dateFilter =
+      cond.type !== undefined
+        ? dateBetween(this.user.timezoneOffset)[cond.type](cond.ago || 0)
+        : () => true;
     return categoryAggregator(
       this.filter(
         fromCondition({

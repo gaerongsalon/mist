@@ -1,4 +1,4 @@
-import { UserRepository } from "../../src/repository";
+import { UserRepository } from "../src/repository";
 
 const userId = "__tests__";
 

@@ -5,7 +5,9 @@ import { BudgetEO } from "./budget";
 import { CategoryEO } from "./category";
 import { HistoryEO } from "./history";
 import { UserStateEO } from "./userState";
+import { ConsoleLogger } from "@yingyeothon/logger";
 
+const logger = new ConsoleLogger("debug");
 const defaultCurrency = `원`;
 
 export class UserEO {
@@ -30,10 +32,10 @@ export class UserEO {
 
   public async store() {
     if (deepEqual(this.value, this.copied)) {
-      console.log(`Equal deeply so I skip to store.`);
+      logger.debug(`Equal deeply so I skip to store.`);
       return;
     } else {
-      console.log(`Write back an user [${JSON.stringify(this.value)}]`);
+      logger.debug(`Write back an user [${JSON.stringify(this.value)}]`);
     }
     await this.writeback(this.value);
     this.copied = deepCopyUser(this.value);

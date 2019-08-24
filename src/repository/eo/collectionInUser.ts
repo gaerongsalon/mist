@@ -30,8 +30,7 @@ export class CollectionInUser<T extends IIndexTuple> {
   }
 
   public add(fields: Omit<T, "index">) {
-    const insertId =
-      (Math.max(...this.elements.map(each => each.index)), 0) + 1;
+    const insertId = Math.max(...this.elements.map(each => each.index), 0) + 1;
     const newTuple = {
       ...fields,
       index: insertId

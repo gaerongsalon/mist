@@ -8,39 +8,53 @@ export enum PeriodType {
 }
 
 const parseUTCDateTime = mem((str: string) => DateTime.fromISO(str).toUTC());
-const utcNow = () => new DateTime().toUTC();
 
 export const dateBetween = (
-  timezoneOffset: number
+  timezoneOffset: number,
+  now: DateTime = DateTime.utc()
 ): {
   [type in PeriodType]: (ago: number) => (date: string) => boolean;
 } => ({
   [PeriodType.Day]: ago => {
-    const endDate = utcNow().plus({ day: -ago, hour: timezoneOffset });
+    const baseNow = now.toUTC().plus({ hour: timezoneOffset });
+    const startOfDay = baseNow.plus({
+      day: -ago,
+      hour: -baseNow.hour,
+      minute: -baseNow.minute,
+      second: -baseNow.second,
+      millisecond: -baseNow.millisecond
+    });
     return date => {
-      const diff = endDate.diff(
-        parseUTCDateTime(date).plus({ hour: timezoneOffset }),
-        "days"
-      );
+      const diff = parseUTCDateTime(date)
+        .plus({ hour: timezoneOffset })
+        .diff(startOfDay, "days");
       return 0 <= diff.days && diff.days <= 1;
     };
   },
   [PeriodType.Week]: ago => {
-    const base = utcNow().plus({ week: -ago, hour: timezoneOffset });
+    const baseNow = now.plus({
+      week: -ago,
+      hour: timezoneOffset
+    });
     return date => {
       const target = parseUTCDateTime(date).plus({
         hour: timezoneOffset
       });
-      return base.year === target.year && base.weekNumber === target.weekNumber;
+      return (
+        baseNow.year === target.year && baseNow.weekNumber === target.weekNumber
+      );
     };
   },
   [PeriodType.Month]: ago => {
-    const base = utcNow().plus({ month: -ago, hour: timezoneOffset });
+    const baseNow = now.plus({
+      month: -ago,
+      hour: timezoneOffset
+    });
     return date => {
       const target = parseUTCDateTime(date).plus({
         hour: timezoneOffset
       });
-      return base.year === target.year && base.month === target.month;
+      return baseNow.year === target.year && baseNow.month === target.month;
     };
   }
 });

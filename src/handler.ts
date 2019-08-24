@@ -1,4 +1,5 @@
 import * as line from "@line/bot-sdk";
+import { ConsoleLogger } from "@yingyeothon/logger";
 import * as awsTypes from "aws-lambda";
 import route from "./route";
 import { alignTextLines } from "./utils/text";
@@ -7,10 +8,9 @@ const lineConfig = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN!,
   channelSecret: process.env.CHANNEL_SECRET!
 };
+const logger = new ConsoleLogger("info");
 
 export const webhook = async (gatewayEvent: awsTypes.APIGatewayEvent) => {
-  console.log(gatewayEvent);
-
   try {
     const signature = gatewayEvent.headers["X-Line-Signature"] as string;
     if (!signature) {
@@ -28,7 +28,7 @@ export const webhook = async (gatewayEvent: awsTypes.APIGatewayEvent) => {
     let lineEvents: { events: line.WebhookEvent[] };
     try {
       lineEvents = JSON.parse(body);
-      console.log(JSON.stringify(lineEvents, null, 2));
+      logger.debug(`EventFromLine`, JSON.stringify(lineEvents, null, 2));
     } catch (err) {
       throw new line.JSONParseError(err.message, body);
     }

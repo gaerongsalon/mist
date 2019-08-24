@@ -1,3 +1,4 @@
+import { UserRepository } from "../src/repository";
 import route from "../src/route";
 import says from "../src/says";
 
@@ -10,15 +11,7 @@ const debugRoute = (text: string) =>
   });
 
 beforeEach(async () => {
-  while (true) {
-    const list = await debugRoute("수정");
-    if (list === says.noHistory()) {
-      await debugRoute("ㅂㅂ");
-      break;
-    }
-    await debugRoute("1");
-    await debugRoute("ㅇㅇ");
-  }
+  await new UserRepository(userId).delete();
 });
 
 test("says hello", async () => {
@@ -50,6 +43,7 @@ test("set and confirm tz", async () => {
 });
 
 test("set and confirm goal", async () => {
+  await debugRoute("기본 화폐 CHF");
   await debugRoute("목표 1000.17");
   const result = await debugRoute("목표");
   expect(result).toEqual("목표는 1,000.17CHF입니다.");
@@ -81,4 +75,31 @@ test("add two", async () => {
   const result = await debugRoute("누적 오늘");
   expect(result).toBeDefined();
   expect(result).toContain("684.24");
+});
+
+test("delete all history", async () => {
+  await debugRoute("분류 1 음식 추가");
+  for (let i = 0; i < 10; ++i) {
+    await debugRoute("1 pizza 12");
+  }
+  await debugRoute("누적 오늘");
+
+  while (true) {
+    const list = await debugRoute("수정");
+    if (list === says.noHistory()) {
+      await debugRoute("ㅂㅂ");
+      break;
+    }
+    await debugRoute("1");
+    await debugRoute("ㅇㅇ");
+  }
+});
+
+test("add two category", async () => {
+  await debugRoute("분류 1 식사 추가");
+  await debugRoute("분류 2 교통 추가");
+  await debugRoute("1 pizza 34.2");
+  await debugRoute("2 taxi 11");
+  expect(await debugRoute("누적 오늘 식사")).toContain("34.2");
+  expect(await debugRoute("누적 오늘 교통")).toContain("11");
 });
