@@ -117,3 +117,8 @@ test("modify history", async () => {
   await debugRoute("1 pasta 14.8");
   expect(await debugRoute("오늘 식사")).toContain("14.8");
 });
+
+test("reset state", async () => {
+  await debugRoute("어디야");
+  await debugRoute("돌아와");
+});

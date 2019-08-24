@@ -92,7 +92,7 @@ class Handler {
     );
 
     if (response) {
-      line.reply(replyToken, response);
+      await line.reply(replyToken, response);
     }
   };
 }

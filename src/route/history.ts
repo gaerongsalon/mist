@@ -34,18 +34,16 @@ const startModifyHistory = async (eo: UserEO, count: number) => {
   recent.reverse();
 
   const { userCurrency } = eo;
-  const data = recent.map((e, index) => {
-    return {
-      index: e.index,
-      text: says.historyListItem({
-        index,
-        categoryName: eo.category.findNameByIndex(e.categoryIndex),
-        comment: e.comment,
-        amount: e.amount,
-        currency: userCurrency
-      })
-    };
-  });
+  const data = recent.map((e, index) => ({
+    index: e.index,
+    text: says.historyListItem({
+      index: index + 1,
+      categoryName: eo.category.findNameByIndex(e.categoryIndex),
+      comment: e.comment,
+      amount: e.amount,
+      currency: userCurrency
+    })
+  }));
   eo.state.set({ name: UserStateName.modify, data });
   await eo.store();
   return [

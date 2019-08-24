@@ -35,7 +35,7 @@ export class UserEO {
       logger.debug(`Equal deeply so I skip to store.`);
       return;
     } else {
-      logger.debug(`Write back an user [${JSON.stringify(this.value)}]`);
+      logger.debug(`Write back user data.`);
     }
     await this.writeback(this.value);
     this.copied = deepCopyUser(this.value);

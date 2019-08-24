@@ -57,7 +57,8 @@ const messages: MessagesMap = {
     `현재 설정된 시간대는 ${timezoneOffset}입니다.`,
   getsetCurrency: ({ currency }) =>
     `현재 설정된 기본 화폐는 ${currency}입니다.`,
-  guideSeparator: () => `---`
+  guideSeparator: () => `---`,
+  whereAmI: ({ where }) => `저는 [${where}]에 있어요!`
 };
 
 export default messages;

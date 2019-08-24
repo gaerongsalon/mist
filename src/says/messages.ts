@@ -76,6 +76,9 @@ export type Messages = {
     currency: string;
   };
   guideSeparator: void;
+  whereAmI: {
+    where: string;
+  };
 };
 
 export type MessagesMap = {
