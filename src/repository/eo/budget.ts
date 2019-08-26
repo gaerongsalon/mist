@@ -11,6 +11,10 @@ export class BudgetEO extends CollectionInUser<IBudget> {
     return maybe ? maybe.name : undefined;
   }
 
+  public findByName(name: string) {
+    return this.find(each => each.name === name);
+  }
+
   public get current() {
     return this.findByIndex(this.user.currentBudgetIndex);
   }

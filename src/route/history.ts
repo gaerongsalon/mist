@@ -1,4 +1,4 @@
-import { UserStateName } from "../repository";
+import { IHistory, UserStateName } from "../repository";
 import { UserEO } from "../repository/eo/user";
 import says from "../says";
 import { PartialRouteMap, Router } from "./router";
@@ -6,8 +6,8 @@ import { PartialRouteMap, Router } from "./router";
 const addHistory = async (
   eo: UserEO,
   maybeCategoryNameOrAlias: string,
-  amount: number,
-  comment: string
+  comment: string,
+  amount: number
 ) => {
   const category = eo.category.findByNameOrAlias(maybeCategoryNameOrAlias);
   if (!category) {
@@ -111,22 +111,31 @@ const deleteSelectedHistory = async (eo: UserEO) =>
 
 const updateHistory = async (
   eo: UserEO,
-  maybeCategoryNameOrAlias: string,
-  amount: number,
-  comment: string
+  maybeOmittedCategoryNameOrAlias: string,
+  maybeOmittedComment: string,
+  maybeOmittedAmount: string
 ) =>
   modifySelectedHistory(eo, index => {
-    const category = eo.category.findByNameOrAlias(maybeCategoryNameOrAlias);
-    if (!category) {
-      return eo.category.elements.length === 0
-        ? says.categoryHelp()
-        : eo.category.elements.map(says.categoryListItem).join("\n");
+    const omitted = "-";
+    const updated: Partial<IHistory> = {};
+    if (maybeOmittedCategoryNameOrAlias !== omitted) {
+      const category = eo.category.findByNameOrAlias(
+        maybeOmittedCategoryNameOrAlias
+      );
+      if (!category) {
+        return eo.category.elements.length === 0
+          ? says.categoryHelp()
+          : eo.category.elements.map(says.categoryListItem).join("\n");
+      }
+      updated.categoryIndex = category.index;
     }
-    eo.history.update(index, {
-      categoryIndex: category.index,
-      amount,
-      comment
-    });
+    if (maybeOmittedAmount !== omitted) {
+      updated.amount = +maybeOmittedAmount;
+    }
+    if (maybeOmittedComment !== omitted) {
+      updated.comment = maybeOmittedComment;
+    }
+    eo.history.update(index, updated);
     return says.yes();
   });
 
@@ -143,8 +152,8 @@ const routes: PartialRouteMap = {
         addHistory(
           eo,
           maybeCategoryNameOrAlias,
-          +(maybeAmount || ""),
-          (maybeComment || "").trim()
+          (maybeComment || "").trim(),
+          +(maybeAmount || "")
         )
     )
     .add(/^수정\s*(\d+)?(?:개)?[!]*$/, (eo, maybeCount) =>
@@ -158,7 +167,7 @@ const routes: PartialRouteMap = {
       selectModifyHistoryIndex(eo, +maybeIndex)
     )
     .add(/^(?:ㅂㅂ|그만|취소)[!]*$/, cancelHisotryModification)
-    .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => says.modifyHelp()),
+    .add(/^(?:\?|\?\?|\?.\?|도움|도움말|도와줘)[!]*$/, () => says.modifyHelp()),
   [UserStateName.modifySelected]: new Router()
     .add(/^수정\s*(\d+)?(?:개)?[!]*$/, (eo, maybeCount) =>
       startModifyHistory(eo, +maybeCount)
@@ -169,13 +178,18 @@ const routes: PartialRouteMap = {
     .add(/^(?:ㅂㅂ|그만|취소)[!]*$/, cancelHisotryModification)
     .add(/^(?:지워|삭제)[!]*$/, deleteSelectedHistory)
     .add(
-      /^([\d\w]+)\s*(.+)\s+(\d+(?:\.\d+)?)(?:\w+)?[!]*$/,
-      (eo, maybeCategoryNameOrAlias, maybeComment, maybeAmount) =>
+      /^([\d\w]+|-)\s*(.+)\s+(\d+(?:\.\d+)?|-)(?:\w+)?[!]*$/,
+      (
+        eo,
+        maybeOmittedCategoryNameOrAlias,
+        maybeOmittedComment,
+        maybeOmittedAmount
+      ) =>
         updateHistory(
           eo,
-          maybeCategoryNameOrAlias,
-          +(maybeAmount || ""),
-          (maybeComment || "").trim()
+          maybeOmittedCategoryNameOrAlias.trim(),
+          maybeOmittedComment.trim(),
+          maybeOmittedAmount.trim()
         )
     )
     .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => says.modifySelectedHelp())

@@ -6,6 +6,7 @@ const userId = "__tests__";
 const repo = new UserRepository(userId);
 
 const debugRoute = async (text: string) => {
+  console.log(text);
   const eo = await repo.eo();
   const state = eo.state.get();
   const result = await routes[state.name].run(text, eo);
@@ -121,4 +122,57 @@ test("modify history", async () => {
 test("reset state", async () => {
   await debugRoute("어디야");
   await debugRoute("돌아와");
+});
+
+test("modify budget", async () => {
+  await debugRoute("예산 책정 100 원 가난뱅이");
+  const before = await debugRoute("예산 목록");
+  expect(before).toContain("가난뱅이");
+  expect(before).toContain("100");
+
+  await debugRoute("예산 책정 50 원 가난뱅이");
+  const after = await debugRoute("예산 목록");
+  expect(after).toContain("가난뱅이");
+  expect(after).toContain("50");
+});
+
+test("modify history with omitted values", async () => {
+  await debugRoute("분류 1 식사 추가");
+  await debugRoute("분류 2 간식 추가");
+  await debugRoute("1 pizza 34.2");
+
+  const original = await debugRoute("오늘");
+  expect(original).toContain("식사");
+  expect(original).toContain("pizza");
+  expect(original).toContain("34.2");
+
+  // Modfiy a category.
+  await debugRoute("수정");
+  await debugRoute("1");
+  await debugRoute("2 - -");
+
+  const categoryModified = await debugRoute("오늘");
+  expect(categoryModified).toContain("간식");
+  expect(categoryModified).toContain("pizza");
+  expect(categoryModified).toContain("34.2");
+
+  // Modify a comment.
+  await debugRoute("수정");
+  await debugRoute("1");
+  await debugRoute("- pan -");
+
+  const commentModified = await debugRoute("오늘");
+  expect(commentModified).toContain("간식");
+  expect(commentModified).toContain("pan");
+  expect(commentModified).toContain("34.2");
+
+  // Modify a amount.
+  await debugRoute("수정");
+  await debugRoute("1");
+  await debugRoute("- - 5.4");
+
+  const amountModified = await debugRoute("오늘");
+  expect(amountModified).toContain("간식");
+  expect(amountModified).toContain("pan");
+  expect(amountModified).toContain("5.4");
 });

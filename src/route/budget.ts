@@ -4,10 +4,10 @@ import { PartialRouteMap, Router } from "./router";
 
 const routes: PartialRouteMap = {
   [UserStateName.empty]: new Router()
-    .add(/^(?:예산\s*도움말)[!?]?/, () => says.noBudget())
+    .add(/^(?:예산\s*도움)(?:말)?[!?]?/, () => says.budgetHelp())
     .add(/^(?:예산)$/, eo =>
       !eo.budget.current
-        ? says.noBudget()
+        ? [says.noBudget(), says.guideSeparator(), says.budgetHelp()].join("\n")
         : says.currentBudget({
             name: eo.budget.current.name,
             amount: eo.budget.current.amount,
@@ -17,18 +17,26 @@ const routes: PartialRouteMap = {
     )
     .add(/^(?:예산\s*목록)$/, eo =>
       eo.budget.elements.length === 0
-        ? says.budgetHelp()
+        ? [says.noBudget(), says.guideSeparator(), says.budgetHelp()].join("\n")
         : eo.budget.elements.map(says.budgetListItem).join("\n")
     )
     .add(
-      /^(?:예산)\s*(?:설정|책정)\s*(\d+(?:\.\d+)?)\s+(\w+)\s+(.+)$/,
-      (eo, amount, currency, maybeName) => {
-        const name = (maybeName || "").trim();
+      /^(?:예산)\s*(?:설정|책정)\s*(\d+(?:\.\d+)?)\s+([^ ]+)\s+(.+)$/,
+      (eo, maybeAmount, maybeCurrency, maybeName) => {
+        const name = maybeName.trim();
+        const amount = +(maybeAmount || "0");
+        const currency = maybeCurrency.trim();
         if (!name) {
           return says.budgetHelp();
         }
-        eo.budget.add({ name: name.trim(), amount: +amount, currency });
-        return says.yes();
+        const oldBudget = eo.budget.findByName(name);
+        if (oldBudget) {
+          eo.budget.update(oldBudget.index, { name, amount, currency });
+          return says.budgetUpdated();
+        } else {
+          eo.budget.add({ name, amount, currency });
+          return says.yes();
+        }
       }
     )
     .add(/^(?:예산)\s*(?:삭제)\s*(.+)$/, (eo, maybeName) => {

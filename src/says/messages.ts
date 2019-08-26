@@ -79,6 +79,7 @@ export type Messages = {
   whereAmI: {
     where: string;
   };
+  budgetUpdated: void;
 };
 
 export type MessagesMap = {

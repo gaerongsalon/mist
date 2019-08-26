@@ -7,7 +7,7 @@ const routes: PartialRouteMap = {
   [UserStateName.empty]: new Router()
     .add(/^(?:안녕|하이|스하).*$/, () => says.hello())
     .add(/^(?:가랑비|낭비).*$/, () => says.warning())
-    .add(/^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/, () => says.help())
+    .add(/^(?:\?|\?\?|\?.\?|도움|도움말|도와줘)[!]*$/, () => says.help())
 };
 
 for (const state of $enum(UserStateName).values()) {
