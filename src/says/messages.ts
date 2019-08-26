@@ -53,7 +53,7 @@ export type Messages = {
   };
   reportHistoryEnd: {
     totalUsed: number;
-    remain: number;
+    totalGoal: number;
     currency: string;
   };
   reportSummaryItem: {

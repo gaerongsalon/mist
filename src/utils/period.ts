@@ -69,3 +69,10 @@ export const periodToDays = (type: PeriodType, value: number) => {
       return value * 30;
   }
 };
+
+export const daysBetween = (dates: string[]) => {
+  const sorted = dates.sort();
+  const begin = parseUTCDateTime(sorted[0]);
+  const end = parseUTCDateTime(sorted[sorted.length - 1]);
+  return Math.ceil(end.diff(begin, "days").days);
+};

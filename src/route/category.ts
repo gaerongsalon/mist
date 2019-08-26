@@ -5,6 +5,9 @@ import { PartialRouteMap, Router } from "./router";
 const routes: PartialRouteMap = {
   [UserStateName.empty]: new Router()
     // category
+    .add(/^(?:카테고리|분류)\s*(?:도움)(?:말)?[!?]?$/, () =>
+      says.categoryHelp()
+    )
     .add(/^(?:카테고리|분류)[!]*$/, eo =>
       eo.category.elements.length === 0
         ? says.categoryHelp()

@@ -4,6 +4,7 @@ import { PartialRouteMap, Router } from "./router";
 
 const routes: PartialRouteMap = {
   [UserStateName.empty]: new Router()
+    .add(/^(?:용돈|목표)\s*(?:도움)(?:말)?[!?]?$/, () => says.goalHelp())
     .add(/^(?:용돈|목표)\s*(\d+(?:\.\d+)?)(?:\w+)?[!]*$/, (eo, amount) => {
       eo.value.goal = +amount;
       return says.getsetGoal({

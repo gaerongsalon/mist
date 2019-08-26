@@ -101,12 +101,20 @@ test("delete all history", async () => {
 }, 1000);
 
 test("add two category", async () => {
+  await debugRoute("기본 화폐 EUR");
+  await debugRoute("목표 50");
   await debugRoute("분류 1 식사 추가");
   await debugRoute("분류 2 교통 추가");
   await debugRoute("1 pizza 34.2");
   await debugRoute("2 taxi 11");
   expect(await debugRoute("누적 오늘 식사")).toContain("34.2");
   expect(await debugRoute("누적 오늘 교통")).toContain("11");
+
+  const wholeThings = await debugRoute("전체");
+  expect(wholeThings).toContain("34.2");
+  expect(wholeThings).toContain("11");
+  expect(await debugRoute("전체 식사")).toContain("34.2");
+  expect(await debugRoute("전체 교통")).toContain("11");
 });
 
 test("modify history", async () => {

@@ -34,7 +34,10 @@ const messages: MessagesMap = {
   currentBudget: ({ name, amount, remain, currency }) =>
     `현재 예산은 [${name}] ${withComma(
       amount
-    )}${currency}이고, 남은 금액은 ${withComma(remain)}${currency}입니다.`,
+    )}${currency}이고, 남은 금액은 ${withComma(remain)}${currency} (${(
+      (remain * 100) /
+      amount
+    ).toFixed(1)}%)입니다.`,
   budgetListItem: ({ name, amount, currency }) =>
     `[${name}] ${withComma(amount)}${currency}`,
   confirmDeleteBudget: ({ name }) =>
@@ -46,10 +49,14 @@ const messages: MessagesMap = {
     `[${index}] (${categoryName}) ${comment} ${withComma(amount)}${currency}`,
   reportHistoryItem: ({ categoryName, comment, amount, currency }) =>
     `[${categoryName}] ${comment} ${withComma(amount)}${currency}`,
-  reportHistoryEnd: ({ totalUsed, remain, currency }) =>
-    `총 ${withComma(totalUsed)}${currency} 사용했고, ${withComma(
-      remain
-    )}${currency} 남았습니다.`,
+  reportHistoryEnd: ({ totalUsed, totalGoal, currency }) =>
+    totalGoal > 0
+      ? `총 ${withComma(totalUsed)}${currency} 사용했고, ${withComma(
+          totalGoal - totalUsed
+        )}${currency} (${(((totalGoal - totalUsed) / totalGoal) * 100).toFixed(
+          1
+        )}%) 남았습니다.`
+      : `총 ${withComma(totalUsed)}${currency} 사용했습니다.`,
   reportSummaryItem: ({ categoryName, amount, currency }) =>
     `[${categoryName}] ${withComma(amount)}${currency}`,
   reportSummaryEnd: ({ totalUsed, currency }) =>
