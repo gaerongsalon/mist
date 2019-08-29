@@ -80,6 +80,7 @@ export type Messages = {
     where: string;
   };
   budgetUpdated: void;
+  categoryDuplicated: void;
 };
 
 export type MessagesMap = {

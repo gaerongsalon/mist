@@ -1,22 +1,21 @@
-import { UserRepository } from "../src/repository";
-import routes from "../src/route";
+import { options } from "../src/handler";
 import says from "../src/says";
+import tk from "../src/toolkit";
 
 const userId = "__tests__";
-const repo = new UserRepository(userId);
+const processor = tk.newProcessorBuilder(options)(userId);
 
 const debugRoute = async (text: string) => {
-  console.log(text);
-  const eo = await repo.eo();
-  const state = eo.state.get();
-  const result = await routes[state.name].run(text, eo);
-  console.log(result);
-  await eo.store();
-  return result;
+  // console.log(text);
+  await processor.prepareContext();
+  const response = await processor.processCommand(text);
+  // console.log(response);
+  await processor.storeContext();
+  return response;
 };
 
 beforeEach(async () => {
-  await repo.delete();
+  await processor.truncate();
 });
 
 test("says hello", async () => {

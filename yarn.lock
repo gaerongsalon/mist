@@ -3069,6 +3069,11 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
 
+fast-copy@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/fast-copy/-/fast-copy-2.0.3.tgz#e9202d6944c9602b575f44d2857cef0f40dc6581"
+  integrity sha512-q0VzLSTRXwNOBzTG8dP+SkCxyTieVAhDEddSvw7X799+k3gb8I5T2IVPhBcwZzAY3Ac1P7/B6TSUvJDdO+8vcg==
+
 fast-deep-equal@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
@@ -6735,6 +6740,23 @@ serverless-prune-plugin@^1.4.0:
   integrity sha512-wcg3riKzzrAWDFW7Ve30MMH9mp6T4ACaWQqVk8dX46nxMn5Dc4oLBRR/PfzrwL6uYZCUxXT6juT5G092H2cjTQ==
   dependencies:
     bluebird "^3.4.7"
+
+serverless-stateful-linebot-framework@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/serverless-stateful-linebot-framework/-/serverless-stateful-linebot-framework-0.1.0.tgz#575088ea172356f1a110c25b3c19092ec2f9629e"
+  integrity sha512-biywkslvgqZN9s7TJHRY3XzgYCxIFFHgoJNRmpn2n4MX+ZC1zQLsRS3VChSIcvnzq2aERVEeeqHact/I11ZJ9A==
+  dependencies:
+    "@line/bot-sdk" "^6.8.2"
+    "@yingyeothon/actor-system" "^0.1.8"
+    "@yingyeothon/actor-system-aws-lambda-support" "^0.1.6"
+    "@yingyeothon/actor-system-redis-support" "^0.1.3"
+    "@yingyeothon/logger" "^0.1.0"
+    "@yingyeothon/repository" "^0.1.3"
+    "@yingyeothon/repository-s3" "^0.1.3"
+    fast-copy "^2.0.3"
+    fast-equals "^2.0.0"
+    ioredis "^4.14.0"
+    mem "^5.1.1"
 
 serverless-webpack@^5.3.1:
   version "5.3.1"
