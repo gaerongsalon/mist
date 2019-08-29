@@ -1,5 +1,5 @@
-import { SettingCommand } from "../commands/setting";
-import tk from "../toolkit";
+import { SettingCommand } from "../../commands/setting";
+import tk from "../../toolkit";
 
 export default tk.partialStateRoutes({
   empty: tk.routes<SettingCommand>({

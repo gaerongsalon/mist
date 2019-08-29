@@ -1,5 +1,5 @@
-import { DebugCommand } from "../commands/debug";
-import tk from "../toolkit";
+import { DebugCommand } from "../../commands/debug";
+import tk from "../../toolkit";
 
 const routes = tk.routes<DebugCommand>({
   showCurrentState: {

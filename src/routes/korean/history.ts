@@ -2,8 +2,8 @@ import {
   HistoryCommand,
   HistoryModifyCommand,
   HistoryModifySelectedCommand
-} from "../commands/history";
-import tk from "../toolkit";
+} from "../../commands/history";
+import tk from "../../toolkit";
 
 const startModify = {
   regex: /^수정\s*(\d+)?(?:개)?[!]*$/,

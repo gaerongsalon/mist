@@ -1,5 +1,5 @@
-import { BudgetCommand, BudgetDeleteCommand } from "../commands/budget";
-import tk from "../toolkit";
+import { BudgetCommand, BudgetDeleteCommand } from "../../commands/budget";
+import tk from "../../toolkit";
 
 export default tk.partialStateRoutes({
   empty: tk.routes<BudgetCommand>({

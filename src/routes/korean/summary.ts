@@ -1,5 +1,5 @@
-import { SummaryCommand } from "../commands/summary";
-import tk from "../toolkit";
+import { SummaryCommand } from "../../commands/summary";
+import tk from "../../toolkit";
 import { newPeriodicRoutes, parseCategory } from "./periodic";
 
 export default tk.partialStateRoutes({

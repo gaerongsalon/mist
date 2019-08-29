@@ -1,5 +1,5 @@
-import { PeriodicCommand } from "../commands/periodic";
-import tk from "../toolkit";
+import { PeriodicCommand } from "../../commands/periodic";
+import tk from "../../toolkit";
 
 export const parseCategory = ([maybeCategory]: string[]) => ({
   maybeCategory: (maybeCategory || "").trim()

@@ -1,5 +1,5 @@
-import { GreetingCommand } from "../commands/greeting";
-import tk from "../toolkit";
+import { GreetingCommand } from "../../commands/greeting";
+import tk from "../../toolkit";
 
 export default tk.partialStateRoutes({
   empty: tk.routes<GreetingCommand>({

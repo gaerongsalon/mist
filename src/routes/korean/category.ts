@@ -1,5 +1,5 @@
-import { CategoryCommand } from "../commands/category";
-import tk from "../toolkit";
+import { CategoryCommand } from "../../commands/category";
+import tk from "../../toolkit";
 
 export default tk.partialStateRoutes({
   empty: tk.routes<CategoryCommand>({
