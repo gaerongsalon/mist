@@ -1,8 +1,9 @@
-import { EntityElementExtension } from "serverless-stateful-linebot-framework";
-import { IBudget, IUser } from "../../models";
+import { Budget, User } from "../../models";
 
-export class BudgetComponent extends EntityElementExtension<IUser, IBudget> {
-  constructor(user: IUser) {
+import { EntityElementExtension } from "serverless-stateful-linebot-framework";
+
+export class BudgetComponent extends EntityElementExtension<User, Budget> {
+  constructor(user: User) {
     super(user, "budgets");
   }
 
@@ -12,7 +13,7 @@ export class BudgetComponent extends EntityElementExtension<IUser, IBudget> {
   }
 
   public findByName(name: string) {
-    return this.find(each => each.name === name);
+    return this.find((each) => each.name === name);
   }
 
   public get current() {

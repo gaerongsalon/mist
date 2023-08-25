@@ -4,7 +4,7 @@ import mem from "mem";
 export enum PeriodType {
   Day,
   Week,
-  Month
+  Month,
 }
 
 const parseUTCDateTime = mem((str: string) => DateTime.fromISO(str).toUTC());
@@ -15,48 +15,48 @@ export const dateBetween = (
 ): {
   [type in PeriodType]: (ago: number) => (date: string) => boolean;
 } => ({
-  [PeriodType.Day]: ago => {
+  [PeriodType.Day]: (ago) => {
     const baseNow = now.toUTC().plus({ hour: timezoneOffset });
     const startOfDay = baseNow.plus({
       day: -ago,
       hour: -baseNow.hour,
       minute: -baseNow.minute,
       second: -baseNow.second,
-      millisecond: -baseNow.millisecond
+      millisecond: -baseNow.millisecond,
     });
-    return date => {
+    return (date) => {
       const diff = parseUTCDateTime(date)
         .plus({ hour: timezoneOffset })
         .diff(startOfDay, "days");
       return 0 <= diff.days && diff.days <= 1;
     };
   },
-  [PeriodType.Week]: ago => {
+  [PeriodType.Week]: (ago) => {
     const baseNow = now.plus({
       week: -ago,
-      hour: timezoneOffset
+      hour: timezoneOffset,
     });
-    return date => {
+    return (date) => {
       const target = parseUTCDateTime(date).plus({
-        hour: timezoneOffset
+        hour: timezoneOffset,
       });
       return (
         baseNow.year === target.year && baseNow.weekNumber === target.weekNumber
       );
     };
   },
-  [PeriodType.Month]: ago => {
+  [PeriodType.Month]: (ago) => {
     const baseNow = now.plus({
       month: -ago,
-      hour: timezoneOffset
+      hour: timezoneOffset,
     });
-    return date => {
+    return (date) => {
       const target = parseUTCDateTime(date).plus({
-        hour: timezoneOffset
+        hour: timezoneOffset,
       });
       return baseNow.year === target.year && baseNow.month === target.month;
     };
-  }
+  },
 });
 
 export const periodToDays = (type: PeriodType, value: number) => {

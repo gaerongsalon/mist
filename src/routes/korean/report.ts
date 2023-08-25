@@ -1,9 +1,9 @@
 import { ReportCommand } from "../../commands/report";
-import tk from "../../toolkit";
 import { newPeriodicRoutes } from "./periodic";
+import tk from "../../toolkit";
 
 export default tk.partialStateRoutes({
   empty: tk.routes<ReportCommand>({
-    ...newPeriodicRoutes()
-  })
+    ...newPeriodicRoutes(),
+  }),
 });

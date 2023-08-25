@@ -1,8 +1,9 @@
+import { PeriodType, daysBetween, periodToDays } from "../utils/period";
+
 import { ReportCommand } from "../commands/report";
 import { UserEntity } from "../entity";
 import says from "../says";
 import tk from "../toolkit";
-import { daysBetween, periodToDays, PeriodType } from "../utils/period";
 
 const reportHistory = async (
   t: UserEntity,
@@ -14,26 +15,26 @@ const reportHistory = async (
   const histories = t.history.findPast({
     categoryIndex: maybeCategory ? maybeCategory.index : -1,
     type,
-    ago
+    ago,
   });
-  const totalUsed = histories.map(e => e.amount).reduce((a, b) => a + b, 0);
+  const totalUsed = histories.map((e) => e.amount).reduce((a, b) => a + b, 0);
   const totalGoal =
     t.value.goal *
     (type
       ? periodToDays(type, 1)
-      : daysBetween(histories.map(e => e.registered)));
+      : daysBetween(histories.map((e) => e.registered)));
 
   const { userCurrency } = t;
   const texts = [
-    ...histories.map(e =>
+    ...histories.map((e) =>
       says.reportHistoryItem({
         categoryName: t.category.findNameByIndex(e.categoryIndex),
         comment: e.comment,
         amount: e.amount,
-        currency: t.getCurrency(e.budgetIndex)
+        currency: t.getCurrency(e.budgetIndex),
       })
     ),
-    says.reportHistoryEnd({ totalUsed, totalGoal, currency: userCurrency })
+    says.reportHistoryEnd({ totalUsed, totalGoal, currency: userCurrency }),
   ];
 
   if (totalGoal > 0) {
@@ -78,6 +79,6 @@ export default tk.partialStateHandlers({
     monthsAgo: ({ context: { t }, maybeCategory, interval }) =>
       reportHistory(t, maybeCategory, PeriodType.Month, interval),
 
-    all: ({ context: { t }, maybeCategory }) => reportHistory(t, maybeCategory)
-  })
+    all: ({ context: { t }, maybeCategory }) => reportHistory(t, maybeCategory),
+  }),
 });

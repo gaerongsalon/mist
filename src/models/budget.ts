@@ -1,6 +1,6 @@
-import { IWithIndex } from "serverless-stateful-linebot-framework";
+import { WithIndex } from "serverless-stateful-linebot-framework";
 
-export interface IBudget extends IWithIndex {
+export interface Budget extends WithIndex {
   name: string;
   amount: number;
   currency: string;

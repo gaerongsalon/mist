@@ -15,5 +15,5 @@ export default {
   history,
   report,
   setting,
-  summary
+  summary,
 };

@@ -1,7 +1,8 @@
-import { toolkit } from "serverless-stateful-linebot-framework";
-import { UserEntity } from "./entity";
-import { IUser, UserState } from "./models";
+import { User, UserState } from "./models";
 
-const tk = toolkit<IUser, UserState, UserEntity>();
+import { UserEntity } from "./entity";
+import { toolkit } from "serverless-stateful-linebot-framework";
+
+const tk = toolkit<User, UserState, UserEntity>();
 
 export default tk;

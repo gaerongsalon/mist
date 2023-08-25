@@ -72,7 +72,7 @@ const messages: MessagesMap = {
   guideSeparator: () => `---`,
   whereAmI: ({ where }) => `저는 [${where}]에 있어요!`,
   budgetUpdated: () => `예산이 갱신되었습니다!`,
-  categoryDuplicated: () => `이미 등록되어 있는 분류입니다!`
+  categoryDuplicated: () => `이미 등록되어 있는 분류입니다!`,
 };
 
 export default messages;

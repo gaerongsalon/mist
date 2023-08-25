@@ -8,12 +8,12 @@ const debugHandlers = tk.handlers<DebugCommand>({
   resetState: ({ context }) => {
     context.transit("empty", undefined);
     return says.yes();
-  }
+  },
 });
 
 export default tk.stateHandlers({
   empty: debugHandlers,
   modify: debugHandlers,
   modifySelected: debugHandlers,
-  deleteBudget: debugHandlers
+  deleteBudget: debugHandlers,
 });

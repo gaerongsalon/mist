@@ -1,28 +1,29 @@
 import {
   HistoryCommand,
   HistoryModifyCommand,
-  HistoryModifySelectedCommand
+  HistoryModifySelectedCommand,
 } from "../../commands/history";
+
 import tk from "../../toolkit";
 
 const startModify = {
   regex: /^수정\s*(\d+)?(?:개)?[!]*$/,
-  parse: ([maybeCount]: string[]) => ({ count: +(maybeCount || "10") })
+  parse: ([maybeCount]: string[]) => ({ count: +(maybeCount || "10") }),
 };
 
 const choose = {
   regex: /^(\d+)(?:번)?[!]*$/,
-  parse: ([maybeIndex]: string[]) => ({ index: +maybeIndex })
+  parse: ([maybeIndex]: string[]) => ({ index: +maybeIndex }),
 };
 
 const cancel = {
   regex: /^(?:ㅂㅂ|그만|취소)[!]*$/,
-  parse: () => undefined
+  parse: () => undefined,
 };
 
 const help = {
   regex: /^(?:\?|\?\?|\?.\?|도움|도와줘)[!]*$/,
-  parse: () => undefined
+  parse: () => undefined,
 };
 
 export default tk.partialStateRoutes({
@@ -32,16 +33,16 @@ export default tk.partialStateRoutes({
       parse: ([maybeCategory, maybeComment, maybeAmount]) => ({
         categoryNameOrAlias: maybeCategory,
         comment: maybeComment.trim(),
-        amount: +maybeAmount
-      })
+        amount: +maybeAmount,
+      }),
     },
-    startModify
+    startModify,
   }),
   modify: tk.routes<HistoryModifyCommand>({
     startModify,
     cancel,
     choose,
-    help
+    help,
   }),
   modifySelected: tk.routes<HistoryModifySelectedCommand>({
     startModify,
@@ -53,16 +54,16 @@ export default tk.partialStateRoutes({
       parse: ([
         maybeOmittedCategoryNameOrAlias,
         maybeOmittedComment,
-        maybeOmittedAmount
+        maybeOmittedAmount,
       ]) => ({
         maybeOmittedCategoryNameOrAlias: maybeOmittedCategoryNameOrAlias.trim(),
         maybeOmittedComment: maybeOmittedComment.trim(),
-        maybeOmittedAmount: maybeOmittedAmount.trim()
-      })
+        maybeOmittedAmount: maybeOmittedAmount.trim(),
+      }),
     },
     delete: {
       regex: /^(?:지워|삭제)[!]*$/,
-      parse: () => undefined
-    }
-  })
+      parse: () => undefined,
+    },
+  }),
 });

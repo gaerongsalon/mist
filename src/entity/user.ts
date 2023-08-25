@@ -1,7 +1,7 @@
-import { IUser } from "../models";
 import { BudgetComponent } from "./components/budget";
 import { CategoryComponent } from "./components/category";
 import { HistoryComponent } from "./components/history";
+import { User } from "../models";
 
 const defaultCurrency = `원`;
 
@@ -10,7 +10,7 @@ export class UserEntity {
   public readonly category: CategoryComponent;
   public readonly history: HistoryComponent;
 
-  constructor(public readonly value: IUser) {
+  constructor(public readonly value: User) {
     this.budget = new BudgetComponent(value);
     this.category = new CategoryComponent(value);
     this.history = new HistoryComponent(value);
@@ -18,17 +18,17 @@ export class UserEntity {
 
   public get userCurrency() {
     const maybeBudget = this.budget.findByIndex(this.value.currentBudgetIndex);
-    return (maybeBudget
-      ? maybeBudget.currency
-      : this.value.currency || defaultCurrency
+    return (
+      maybeBudget
+        ? maybeBudget.currency
+        : this.value.currency || defaultCurrency
     ).toUpperCase();
   }
 
   public getCurrency(budgetIndex: number) {
     const maybeBudget = this.budget.findByIndex(budgetIndex);
-    return (maybeBudget
-      ? maybeBudget.currency
-      : this.userCurrency
+    return (
+      maybeBudget ? maybeBudget.currency : this.userCurrency
     ).toUpperCase();
   }
 

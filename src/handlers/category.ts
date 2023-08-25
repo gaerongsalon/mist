@@ -13,11 +13,11 @@ export default tk.partialStateHandlers({
       if (!alias || !name) {
         return says.categoryHelp();
       }
-      if (!!t.category.find(each => each.name === name)) {
+      if (!!t.category.find((each) => each.name === name)) {
         return says.categoryDuplicated();
       }
       t.category.add({ name, alias });
       return says.yes();
-    }
-  })
+    },
+  }),
 });

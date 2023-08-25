@@ -1,13 +1,11 @@
+import { Category, User } from "../../models";
+
 import { EntityElementExtension } from "serverless-stateful-linebot-framework";
-import { ICategory, IUser } from "../../models";
 
 const unknownCategoryName = "Unknown";
 
-export class CategoryComponent extends EntityElementExtension<
-  IUser,
-  ICategory
-> {
-  constructor(user: IUser) {
+export class CategoryComponent extends EntityElementExtension<User, Category> {
+  constructor(user: User) {
     super(user, "categories");
   }
 
@@ -24,6 +22,6 @@ export class CategoryComponent extends EntityElementExtension<
   }
 }
 
-export const filterCategoryByNameOrAlias = (nameOrAlias: string) => (
-  each: ICategory
-) => each.name.includes(nameOrAlias) || each.alias === nameOrAlias;
+export const filterCategoryByNameOrAlias =
+  (nameOrAlias: string) => (each: Category) =>
+    each.name.includes(nameOrAlias) || each.alias === nameOrAlias;

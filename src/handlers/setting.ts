@@ -9,7 +9,7 @@ export default tk.partialStateHandlers({
       t.value.goal = amount;
       return says.getsetGoal({
         goal: t.value.goal,
-        currency: t.userCurrency
+        currency: t.userCurrency,
       });
     },
     getGoal: ({ context: { t } }) =>
@@ -27,6 +27,6 @@ export default tk.partialStateHandlers({
       return says.getsetCurrency({ currency: t.value.currency });
     },
     getCurrency: ({ context: { t } }) =>
-      says.getsetCurrency({ currency: t.value.currency })
-  })
+      says.getsetCurrency({ currency: t.value.currency }),
+  }),
 });

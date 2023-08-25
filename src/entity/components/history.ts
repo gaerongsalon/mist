@@ -1,18 +1,19 @@
-import { EntityElementExtension } from "serverless-stateful-linebot-framework";
-import { IHistory, IUser } from "../../models";
-import { dateBetween, PeriodType } from "../../utils/period";
+import { History, User } from "../../models";
+import { PeriodType, dateBetween } from "../../utils/period";
 
-export interface IAggregatedHistory {
+import { EntityElementExtension } from "serverless-stateful-linebot-framework";
+
+export interface AggregatedHistory {
   categoryIndex: number;
   amount: number;
 }
 
-export class HistoryComponent extends EntityElementExtension<IUser, IHistory> {
-  constructor(user: IUser) {
+export class HistoryComponent extends EntityElementExtension<User, History> {
+  constructor(user: User) {
     super(user, "histories");
   }
 
-  public findRecent(cond: ICountCondition) {
+  public findRecent(cond: CountCondition) {
     return this.filter(
       fromCondition({ budgetIndex: this.entity.currentBudgetIndex })
     )
@@ -20,22 +21,22 @@ export class HistoryComponent extends EntityElementExtension<IUser, IHistory> {
       .filter(takeN(cond.count || 10));
   }
 
-  public findPast(cond: IPeriodCondition & ICategoryCondition) {
+  public findPast(cond: PeriodCondition & ICategoryCondition) {
     const dateFilter =
       cond.type !== undefined
         ? dateBetween(this.entity.timezoneOffset)[cond.type](cond.ago || 0)
         : () => true;
     return this.filter(
       fromCondition({
-        budgetIndex: this.entity.currentBudgetIndex
+        budgetIndex: this.entity.currentBudgetIndex,
       })
     )
       .filter(categoryFilter(cond))
-      .filter(each => dateFilter(each.registered))
+      .filter((each) => dateFilter(each.registered))
       .sort(ascByRegistered);
   }
 
-  public aggregatePast(cond: IPeriodCondition & ICategoryCondition) {
+  public aggregatePast(cond: PeriodCondition & ICategoryCondition) {
     const dateFilter =
       cond.type !== undefined
         ? dateBetween(this.entity.timezoneOffset)[cond.type](cond.ago || 0)
@@ -43,30 +44,30 @@ export class HistoryComponent extends EntityElementExtension<IUser, IHistory> {
     return categoryAggregator(
       this.filter(
         fromCondition({
-          budgetIndex: this.entity.currentBudgetIndex
+          budgetIndex: this.entity.currentBudgetIndex,
         })
       )
-        .filter(each => dateFilter(each.registered))
+        .filter((each) => dateFilter(each.registered))
         .filter(categoryFilter(cond))
     );
   }
 
   public get totalUsed() {
     return this.aggregatePast({})
-      .map(e => e.amount)
+      .map((e) => e.amount)
       .reduce((a, b) => a + b, 0);
   }
 }
 
-interface IFromCondition {
+interface FromCondition {
   budgetIndex: number;
 }
 
-interface ICountCondition {
+interface CountCondition {
   count: number;
 }
 
-interface IPeriodCondition {
+interface PeriodCondition {
   type?: PeriodType;
   ago?: number;
 }
@@ -75,35 +76,35 @@ interface ICategoryCondition {
   categoryIndex?: number;
 }
 
-const fromCondition = (cond: IFromCondition) => (each: IHistory) =>
+const fromCondition = (cond: FromCondition) => (each: History) =>
   cond.budgetIndex === undefined ||
   cond.budgetIndex === -1 ||
   each.budgetIndex === cond.budgetIndex;
 
 const takeN = (count: number) => (_: any, index: number) => index < count;
 const ascByRegistered = (
-  { registered: a }: IHistory,
-  { registered: b }: IHistory
+  { registered: a }: History,
+  { registered: b }: History
 ) => a.localeCompare(b);
 const descByRegistered = (
-  { registered: a }: IHistory,
-  { registered: b }: IHistory
+  { registered: a }: History,
+  { registered: b }: History
 ) => b.localeCompare(a);
 
-const categoryFilter = (cond: ICategoryCondition) => ({
-  categoryIndex
-}: IHistory) =>
-  cond.categoryIndex === undefined ||
-  cond.categoryIndex === -1 ||
-  cond.categoryIndex === categoryIndex;
+const categoryFilter =
+  (cond: ICategoryCondition) =>
+  ({ categoryIndex }: History) =>
+    cond.categoryIndex === undefined ||
+    cond.categoryIndex === -1 ||
+    cond.categoryIndex === categoryIndex;
 
-const categoryAggregator = (values: IHistory[]) =>
+const categoryAggregator = (values: History[]) =>
   Object.entries(
     values.reduce(
       (accumulated, value) =>
         Object.assign(accumulated, {
           [value.categoryIndex]:
-            (accumulated[value.categoryIndex] || 0) + value.amount
+            (accumulated[value.categoryIndex] || 0) + value.amount,
         }),
       {} as { [categoryIndex: number]: number }
     )
@@ -111,6 +112,6 @@ const categoryAggregator = (values: IHistory[]) =>
     ([categoryIndex, accumulatedAmount]) =>
       ({
         categoryIndex: +categoryIndex,
-        amount: accumulatedAmount
-      } as IAggregatedHistory)
+        amount: accumulatedAmount,
+      }) as AggregatedHistory
   );

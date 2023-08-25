@@ -1,10 +1,11 @@
 import {
   HistoryCommand,
   HistoryModifyCommand,
-  HistoryModifySelectedCommand
+  HistoryModifySelectedCommand,
 } from "../commands/history";
+
+import { History } from "../models";
 import { UserEntity } from "../entity";
-import { IHistory } from "../models";
 import says from "../says";
 import tk from "../toolkit";
 
@@ -28,7 +29,7 @@ const addHistory = async (
     amount,
     comment,
     currency: t.userCurrency,
-    registered: new Date().toISOString()
+    registered: new Date().toISOString(),
   });
   return says.yes();
 };
@@ -49,14 +50,14 @@ const startModifyHistory = async (context: Context, count: number) => {
       categoryName: t.category.findNameByIndex(e.categoryIndex),
       comment: e.comment,
       amount: e.amount,
-      currency: userCurrency
-    })
+      currency: userCurrency,
+    }),
   }));
   context.transit("modify", { data });
   return [
     says.modifyHelp(),
     says.guideSeparator(),
-    ...data.map(e => e.text)
+    ...data.map((e) => e.text),
   ].join("\n");
 };
 
@@ -78,12 +79,12 @@ const selectModifyHistoryIndex = async (context: Context, selected: number) => {
   }
   context.transit("modifySelected", {
     data: payload.data,
-    selectedIndex: targetIndex
+    selectedIndex: targetIndex,
   });
   return [
     says.modifySelectedHelp(),
     says.guideSeparator(),
-    payload.data[targetIndex].text
+    payload.data[targetIndex].text,
   ].join("\n");
 };
 
@@ -110,7 +111,7 @@ const modifySelectedHistory = async (
 };
 
 const deleteSelectedHistory = async (context: Context) =>
-  modifySelectedHistory(context, index => {
+  modifySelectedHistory(context, (index) => {
     context.t.history.remove(index);
     return says.deleted();
   });
@@ -121,10 +122,10 @@ const updateHistory = async (
   maybeOmittedComment: string,
   maybeOmittedAmount: string
 ) =>
-  modifySelectedHistory(context, index => {
+  modifySelectedHistory(context, (index) => {
     const { t } = context;
     const omitted = "-";
-    const updated: Partial<IHistory> = {};
+    const updated: Partial<History> = {};
     if (maybeOmittedCategoryNameOrAlias !== omitted) {
       const category = t.category.findByNameOrAlias(
         maybeOmittedCategoryNameOrAlias
@@ -155,13 +156,13 @@ export default tk.partialStateHandlers({
   empty: tk.handlers<HistoryCommand>({
     addHistory: ({ context: { t }, categoryNameOrAlias, comment, amount }) =>
       addHistory(t, categoryNameOrAlias, comment, amount),
-    startModify: ({ context, count }) => startModifyHistory(context, count)
+    startModify: ({ context, count }) => startModifyHistory(context, count),
   }),
   modify: tk.handlers<HistoryModifyCommand>({
     startModify: ({ context, count }) => startModifyHistory(context, count),
     help: () => says.modifyHelp(),
     cancel: ({ context }) => cancelHisotryModification(context),
-    choose: ({ context, index }) => selectModifyHistoryIndex(context, index)
+    choose: ({ context, index }) => selectModifyHistoryIndex(context, index),
   }),
   modifySelected: tk.handlers<HistoryModifySelectedCommand>({
     startModify: ({ context, count }) => startModifyHistory(context, count),
@@ -173,13 +174,13 @@ export default tk.partialStateHandlers({
       context,
       maybeOmittedCategoryNameOrAlias,
       maybeOmittedComment,
-      maybeOmittedAmount
+      maybeOmittedAmount,
     }) =>
       updateHistory(
         context,
         maybeOmittedCategoryNameOrAlias,
         maybeOmittedComment,
         maybeOmittedAmount
-      )
-  })
+      ),
+  }),
 });

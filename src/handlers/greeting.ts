@@ -6,6 +6,6 @@ export default tk.partialStateHandlers({
   empty: tk.handlers<GreetingCommand>({
     hello: () => says.hello(),
     help: () => says.help(),
-    warn: () => says.warning()
-  })
+    warn: () => says.warning(),
+  }),
 });

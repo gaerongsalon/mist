@@ -1,38 +1,45 @@
 service: mist
 
 plugins:
-  - serverless-webpack
+  - serverless-esbuild
   - serverless-offline
   - serverless-prune-plugin
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs18.x
   stage: production
   region: ap-northeast-2
   tracing:
     apiGateway: true
     lambda: true
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "s3:PutObject"
-        - "s3:PutObjectAcl"
-        - "s3:GetObject"
-        - "s3:GetObjectAcl"
-        - "s3:DeleteObject"
-      Resource:
-        - "arn:aws:s3:::${env:BUCKET_NAME}/*"
-    - Effect: "Allow"
-      Action:
-        - "s3:ListBucket"
-      Resource:
-        - "arn:aws:s3:::${env:BUCKET_NAME}"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:PutObjectAcl"
+            - "s3:GetObject"
+            - "s3:GetObjectAcl"
+            - "s3:DeleteObject"
+          Resource:
+            - "arn:aws:s3:::${env:BUCKET_NAME}/*"
+        - Effect: "Allow"
+          Action:
+            - "s3:ListBucket"
+          Resource:
+            - "arn:aws:s3:::${env:BUCKET_NAME}"
 
 custom:
   prune:
     automatic: true
     number: 7
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node18
 
 functions:
   webhook:

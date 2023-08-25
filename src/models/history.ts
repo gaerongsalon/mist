@@ -1,6 +1,6 @@
-import { IWithIndex } from "serverless-stateful-linebot-framework";
+import { WithIndex } from "serverless-stateful-linebot-framework";
 
-export interface IHistory extends IWithIndex {
+export interface History extends WithIndex {
   categoryIndex: number;
   budgetIndex: number;
   comment: string;

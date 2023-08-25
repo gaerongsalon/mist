@@ -1,6 +1,6 @@
-import { IWithIndex } from "serverless-stateful-linebot-framework";
+import { WithIndex } from "serverless-stateful-linebot-framework";
 
-export interface ICategory extends IWithIndex {
+export interface Category extends WithIndex {
   name: string;
   alias: string;
 }

@@ -1,4 +1,5 @@
 import { BudgetCommand, BudgetDeleteCommand } from "../commands/budget";
+
 import says from "../says";
 import tk from "../toolkit";
 
@@ -16,9 +17,9 @@ export default tk.partialStateHandlers({
               name: t.budget.current.name,
               amount: t.budget.current.amount,
               remain: t.remain,
-              currency: t.budget.current.currency
+              currency: t.budget.current.currency,
             })
-          : says.noBudget()
+          : says.noBudget(),
       ].join("\n");
     },
     addOrUpdate: ({ context: { t }, name, amount, currency }) => {
@@ -36,24 +37,24 @@ export default tk.partialStateHandlers({
     },
     startToDelete: ({ context, name }) => {
       const { t } = context;
-      const target = t.budget.find(each => each.name === name);
+      const target = t.budget.find((each) => each.name === name);
       if (!target) {
         return says.noBudget();
       }
       context.transit("deleteBudget", {
-        selectedIndex: target.index
+        selectedIndex: target.index,
       });
       return says.confirmDeleteBudget(target);
     },
     use: ({ context, name }) => {
       const { t } = context;
-      const target = t.budget.find(each => each.name === name);
+      const target = t.budget.find((each) => each.name === name);
       if (!target) {
         return says.noBudget();
       }
       context.update({
         ...t.value,
-        currentBudgetIndex: target.index
+        currentBudgetIndex: target.index,
       });
       return says.changeBudget(target);
     },
@@ -61,10 +62,10 @@ export default tk.partialStateHandlers({
       const { t } = context;
       context.update({
         ...t.value,
-        currentBudgetIndex: -1
+        currentBudgetIndex: -1,
       });
       return says.resetBudget();
-    }
+    },
   }),
   deleteBudget: tk.handlers<BudgetDeleteCommand>({
     delete: ({ context }) => {
@@ -73,7 +74,7 @@ export default tk.partialStateHandlers({
       if (payload) {
         t.budget.remove(payload.selectedIndex);
         t.history.removeWhere(
-          each => each.budgetIndex === payload.selectedIndex
+          (each) => each.budgetIndex === payload.selectedIndex
         );
       }
       context.transit("empty", undefined);
@@ -82,6 +83,6 @@ export default tk.partialStateHandlers({
     cancelDeletion: ({ context }) => {
       context.transit("empty", undefined);
       return says.modificationCompleted();
-    }
-  })
+    },
+  }),
 });

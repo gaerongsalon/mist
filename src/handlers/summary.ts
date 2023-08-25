@@ -1,8 +1,8 @@
+import { PeriodType } from "../utils/period";
 import { SummaryCommand } from "../commands/summary";
 import { UserEntity } from "../entity";
 import says from "../says";
 import tk from "../toolkit";
-import { PeriodType } from "../utils/period";
 
 const summarizeHistory = async (
   t: UserEntity,
@@ -14,19 +14,19 @@ const summarizeHistory = async (
   const aggregated = t.history.aggregatePast({
     categoryIndex: maybeCategory ? maybeCategory.index : -1,
     type,
-    ago
+    ago,
   });
-  const totalUsed = aggregated.map(e => e.amount).reduce((a, b) => a + b, 0);
+  const totalUsed = aggregated.map((e) => e.amount).reduce((a, b) => a + b, 0);
   const { userCurrency } = t;
   return [
-    ...aggregated.map(e =>
+    ...aggregated.map((e) =>
       says.reportSummaryItem({
         categoryName: t.category.findNameByIndex(e.categoryIndex),
         amount: e.amount,
-        currency: userCurrency
+        currency: userCurrency,
       })
     ),
-    says.reportSummaryEnd({ totalUsed, currency: userCurrency })
+    says.reportSummaryEnd({ totalUsed, currency: userCurrency }),
   ].join("\n");
 };
 
@@ -62,6 +62,6 @@ export default tk.partialStateHandlers({
       summarizeHistory(t, maybeCategory, PeriodType.Month, interval),
 
     all: ({ context: { t }, maybeCategory }) =>
-      summarizeHistory(t, maybeCategory)
-  })
+      summarizeHistory(t, maybeCategory),
+  }),
 });
