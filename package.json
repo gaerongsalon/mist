@@ -20,7 +20,7 @@
     "fast-equals": "^5.0.1",
     "luxon": "^3.4.1",
     "mem": "8",
-    "serverless-stateful-linebot-framework": "^0.4.1",
+    "serverless-stateful-linebot-framework": "^0.4.2",
     "ts-enum-util": "^4.0.2"
   },
   "author": "jaeyoung.choi <lactrious@gmail.com>",

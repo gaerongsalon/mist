@@ -39,8 +39,8 @@ dependencies:
     specifier: '8'
     version: 8.1.1
   serverless-stateful-linebot-framework:
-    specifier: ^0.4.1
-    version: 0.4.1
+    specifier: ^0.4.2
+    version: 0.4.2
   ts-enum-util:
     specifier: ^4.0.2
     version: 4.0.2
@@ -7563,8 +7563,8 @@ packages:
       serverless: 3.34.0
     dev: true
 
-  /serverless-stateful-linebot-framework@0.4.1:
-    resolution: {integrity: sha512-I/FntbkMvMjD9yKjrNSpK5zBxUGOTTddQU1/kKVPFuSRkZFwi0A2Bbm6IyZENenTWsCi9B4T5orhCeR4vi325w==}
+  /serverless-stateful-linebot-framework@0.4.2:
+    resolution: {integrity: sha512-4opsGK18omS+jB8KYsYMnWk8XARSMDN6EDM9w7JK23KADQrKd87Mw9aKE3QA6/oGQY/Vs9yRNdQgDAOwTHRv4A==}
     dependencies:
       '@line/bot-sdk': 7.5.2
       '@yingyeothon/actor-system': 0.4.0
