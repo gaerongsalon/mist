@@ -25,13 +25,13 @@ export default tk.partialStateRoutes({
       regex: /^(?:예산)\s*(?:삭제)\s*(.+)[!]*$/,
       parse: ([maybeName]) => ({ name: maybeName.trim() }),
     },
-    use: {
-      regex: /^(?:예산)\s*(?:설정|사용|변경)?\s*(.+)[!]*$/,
-      parse: ([maybeName]) => ({ name: maybeName.trim() }),
-    },
     unuse: {
       regex: /^(?:예산)\s*(?:취소)[!]*$/,
       parse: () => undefined,
+    },
+    use: {
+      regex: /^(?:예산)\s*(?:설정|사용|변경)?\s*(.+)[!]*$/,
+      parse: ([maybeName]) => ({ name: maybeName.trim() }),
     },
   }),
   deleteBudget: tk.routes<BudgetDeleteCommand>({
