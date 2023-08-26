@@ -17,19 +17,26 @@ export class UserEntity {
   }
 
   public get userCurrency() {
-    const maybeBudget = this.budget.findByIndex(this.value.currentBudgetIndex);
     return (
-      maybeBudget
-        ? maybeBudget.currency
-        : this.value.currency || defaultCurrency
+      this.budget.current?.currency ??
+      this.value.currency ??
+      defaultCurrency
     ).toUpperCase();
   }
 
+  public get userDecimalPoint() {
+    return this.budget.current?.decimalPoint ?? 0;
+  }
+
   public getCurrency(budgetIndex: number) {
-    const maybeBudget = this.budget.findByIndex(budgetIndex);
     return (
-      maybeBudget ? maybeBudget.currency : this.userCurrency
+      this.budget.findByIndex(budgetIndex)?.currency ?? this.userCurrency
     ).toUpperCase();
+  }
+
+  public getDecimalPoint(budgetIndex: number) {
+    const maybeBudget = this.budget.findByIndex(budgetIndex);
+    return maybeBudget?.decimalPoint ?? 0;
   }
 
   public get remain() {

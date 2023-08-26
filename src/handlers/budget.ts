@@ -18,6 +18,8 @@ export default tk.partialStateHandlers({
               amount: t.budget.current.amount,
               remain: t.remain,
               currency: t.budget.current.currency,
+              exchangeRate: t.budget.current.exchangeRate,
+              decimalPoint: t.budget.current.decimalPoint,
             })
           : says.noBudget(),
       ].join("\n");
@@ -31,7 +33,13 @@ export default tk.partialStateHandlers({
         t.budget.update(oldBudget.index, { name, amount, currency });
         return says.budgetUpdated();
       } else {
-        t.budget.add({ name, amount, currency });
+        t.budget.add({
+          name,
+          amount,
+          currency,
+          exchangeRate: 1,
+          decimalPoint: 0,
+        });
         return says.yes();
       }
     },
@@ -48,7 +56,7 @@ export default tk.partialStateHandlers({
     },
     use: ({ context, name }) => {
       const { t } = context;
-      const target = t.budget.find((each) => each.name === name);
+      const target = t.budget.findByName(name);
       if (!target) {
         return says.noBudget();
       }
@@ -65,6 +73,34 @@ export default tk.partialStateHandlers({
         currentBudgetIndex: -1,
       });
       return says.resetBudget();
+    },
+    exchange: ({ context, rate }) => {
+      const {
+        t: { budget },
+      } = context;
+      if (!budget.current) {
+        return says.noBudget();
+      }
+      budget.current.exchangeRate = rate;
+      return says.updateBudgetExchangeRate({
+        exchangeRate: rate,
+        currency: budget.current.currency,
+        name: budget.current.name,
+      });
+    },
+    decimal: ({ context, point }) => {
+      const {
+        t: { budget },
+      } = context;
+      if (!budget.current) {
+        return says.noBudget();
+      }
+      budget.current.decimalPoint = point;
+      return says.updateBudgetDecimalPoint({
+        decimalPoint: point,
+        currency: budget.current.currency,
+        name: budget.current.name,
+      });
     },
   }),
   deleteBudget: tk.handlers<BudgetDeleteCommand>({

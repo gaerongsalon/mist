@@ -24,7 +24,7 @@ const reportHistory = async (
       ? periodToDays(type, 1)
       : daysBetween(histories.map((e) => e.registered)));
 
-  const { userCurrency } = t;
+  const { userCurrency, userDecimalPoint } = t;
   const texts = [
     ...histories.map((e) =>
       says.reportHistoryItem({
@@ -32,9 +32,15 @@ const reportHistory = async (
         comment: e.comment,
         amount: e.amount,
         currency: t.getCurrency(e.budgetIndex),
+        decimalPoint: t.getDecimalPoint(e.budgetIndex),
       })
     ),
-    says.reportHistoryEnd({ totalUsed, totalGoal, currency: userCurrency }),
+    says.reportHistoryEnd({
+      totalUsed,
+      totalGoal,
+      currency: userCurrency,
+      decimalPoint: userDecimalPoint,
+    }),
   ];
 
   if (totalGoal > 0) {

@@ -29,6 +29,14 @@ export default tk.partialStateRoutes({
       regex: /^(?:예산)\s*(?:취소)[!]*$/,
       parse: () => undefined,
     },
+    exchange: {
+      regex: /^(?:예산)\s*(?:환율)\s+(\d+(?:\.\d+)?)[!]*$/,
+      parse: ([rateString]) => ({ rate: +rateString }),
+    },
+    decimal: {
+      regex: /^(?:예산)\s*(?:소숫점)\s+(\d+)\s*(?:자리)?[!]*$/,
+      parse: ([pointString]) => ({ point: +pointString }),
+    },
     use: {
       regex: /^(?:예산)\s*(?:설정|사용|변경)?\s*(.+)[!]*$/,
       parse: ([maybeName]) => ({ name: maybeName.trim() }),

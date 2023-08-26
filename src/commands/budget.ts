@@ -9,10 +9,16 @@ export type BudgetCommand = {
   startToDelete: {
     name: string;
   };
+  exchange: {
+    rate: number;
+  };
+  decimal: {
+    point: number;
+  };
+  unuse: void;
   use: {
     name: string;
   };
-  unuse: void;
 };
 
 export type BudgetDeleteCommand = {

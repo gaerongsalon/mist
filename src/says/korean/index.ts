@@ -1,7 +1,23 @@
 import { MessagesMap } from "../messages";
 
-const withComma = (value: number) =>
-  value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function withComma(value: number, decimalPoint: number): string {
+  return value.toFixed(decimalPoint).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+const defaultKoreanCurrency = "원";
+
+function exchangeToDefault({
+  exchangeRate,
+  value,
+}: {
+  exchangeRate: number;
+  value: number;
+}): string {
+  if (exchangeRate <= 0) {
+    return "";
+  }
+  return `(${withComma(value / exchangeRate, 0)}${defaultKoreanCurrency})`;
+}
 
 const messages: MessagesMap = {
   yes: () => `네!`,
@@ -33,38 +49,72 @@ const messages: MessagesMap = {
     `그리고 [예산 설정 (예산 이름)]으로 사용할 예산을 변경하거나, [예산 취소]를 통해 예산 모드를 중단할 수 있습니다.\n` +
     `마지막으로 [예산 삭제 (예산 이름)]으로 등록한 예산을 삭제할 수 있습니다. 이렇게 되면 그 예산의 구매 이력은 조회가 불가능하니 조심하세요!`,
   noBudget: () => `예산을 설정해주세요!`,
-  currentBudget: ({ name, amount, remain, currency }) =>
+  currentBudget: ({
+    name,
+    amount,
+    remain,
+    currency,
+    exchangeRate,
+    decimalPoint,
+  }) =>
     `현재 예산은 [${name}] ${withComma(
-      amount
-    )}${currency}이고, 남은 금액은 ${withComma(remain)}${currency} (${(
-      (remain * 100) /
-      amount
-    ).toFixed(1)}%)입니다.`,
-  budgetListItem: ({ name, amount, currency }) =>
-    `[${name}] ${withComma(amount)}${currency}`,
+      amount,
+      decimalPoint
+    )}${currency}이고, 남은 금액은 ${withComma(
+      remain,
+      decimalPoint
+    )}${currency} ${exchangeToDefault({
+      exchangeRate,
+      value: remain,
+    })} (${((remain * 100) / amount).toFixed(1)}%)입니다.`,
+  budgetListItem: ({ name, amount, currency, decimalPoint }) =>
+    `[${name}] ${withComma(amount, decimalPoint)}${currency}`,
   confirmDeleteBudget: ({ name }) =>
     `예산 [${name}]을 정말 삭제할까요? 해당 예산 내의 모든 이력이 삭제됩니다.`,
   resetBudget: () => `예산 모드를 초기화합니다.`,
   changeBudget: ({ name }) => `예산을 [${name}]으로 변경합니다.`,
   categoryListItem: ({ name, alias }) => `[${alias}] ${name}`,
-  historyListItem: ({ index, categoryName, comment, amount, currency }) =>
-    `[${index}] (${categoryName}) ${comment} ${withComma(amount)}${currency}`,
-  reportHistoryItem: ({ categoryName, comment, amount, currency }) =>
-    `[${categoryName}] ${comment} ${withComma(amount)}${currency}`,
-  reportHistoryEnd: ({ totalUsed, totalGoal, currency }) =>
+  historyListItem: ({
+    index,
+    categoryName,
+    comment,
+    amount,
+    currency,
+    decimalPoint,
+  }) =>
+    `[${index}] (${categoryName}) ${comment} ${withComma(
+      amount,
+      decimalPoint
+    )}${currency}`,
+  reportHistoryItem: ({
+    categoryName,
+    comment,
+    amount,
+    currency,
+    decimalPoint,
+  }) =>
+    `[${categoryName}] ${comment} ${withComma(
+      amount,
+      decimalPoint
+    )}${currency}`,
+  reportHistoryEnd: ({ totalUsed, totalGoal, currency, decimalPoint }) =>
     totalGoal > 0
-      ? `총 ${withComma(totalUsed)}${currency} 사용했고, ${withComma(
-          totalGoal - totalUsed
+      ? `총 ${withComma(
+          totalUsed,
+          decimalPoint
+        )}${currency} 사용했고, ${withComma(
+          totalGoal - totalUsed,
+          decimalPoint
         )}${currency} (${(((totalGoal - totalUsed) / totalGoal) * 100).toFixed(
           1
         )}%) 남았습니다.`
-      : `총 ${withComma(totalUsed)}${currency} 사용했습니다.`,
-  reportSummaryItem: ({ categoryName, amount, currency }) =>
-    `[${categoryName}] ${withComma(amount)}${currency}`,
-  reportSummaryEnd: ({ totalUsed, currency }) =>
-    `총 ${withComma(totalUsed)}${currency} 사용했습니다.`,
-  getsetGoal: ({ goal, currency }) =>
-    `목표는 ${withComma(goal)}${currency}입니다.`,
+      : `총 ${withComma(totalUsed, decimalPoint)}${currency} 사용했습니다.`,
+  reportSummaryItem: ({ categoryName, amount, currency, decimalPoint }) =>
+    `[${categoryName}] ${withComma(amount, decimalPoint)}${currency}`,
+  reportSummaryEnd: ({ totalUsed, currency, decimalPoint }) =>
+    `총 ${withComma(totalUsed, decimalPoint)}${currency} 사용했습니다.`,
+  getsetGoal: ({ goal, currency, decimalPoint }) =>
+    `목표는 ${withComma(goal, decimalPoint)}${currency}입니다.`,
   getsetTimezone: ({ timezoneOffset }) =>
     `현재 설정된 시간대는 ${timezoneOffset}입니다.`,
   getsetCurrency: ({ currency }) =>
@@ -73,6 +123,10 @@ const messages: MessagesMap = {
   whereAmI: ({ where }) => `저는 [${where}]에 있어요!`,
   budgetUpdated: () => `예산이 갱신되었습니다!`,
   categoryDuplicated: () => `이미 등록되어 있는 분류입니다!`,
+  updateBudgetExchangeRate: ({ exchangeRate, currency, name }) =>
+    `이제 예산 [${name}]의 환율은 1 KRW -> ${exchangeRate} ${currency} 입니다.`,
+  updateBudgetDecimalPoint: ({ decimalPoint, currency, name }) =>
+    `이제 예산 [${name}]의 ${currency} 화폐 소숫점은 ${decimalPoint} 자리입니다.`,
 };
 
 export default messages;

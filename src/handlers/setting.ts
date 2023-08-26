@@ -10,10 +10,15 @@ export default tk.partialStateHandlers({
       return says.getsetGoal({
         goal: t.value.goal,
         currency: t.userCurrency,
+        decimalPoint: t.userDecimalPoint,
       });
     },
     getGoal: ({ context: { t } }) =>
-      says.getsetGoal({ goal: t.value.goal, currency: t.userCurrency }),
+      says.getsetGoal({
+        goal: t.value.goal,
+        currency: t.userCurrency,
+        decimalPoint: t.userDecimalPoint,
+      }),
 
     setTimezoneOffset: ({ context: { t }, timezoneOffset }) => {
       t.value.timezoneOffset = timezoneOffset;

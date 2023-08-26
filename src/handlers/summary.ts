@@ -17,16 +17,21 @@ const summarizeHistory = async (
     ago,
   });
   const totalUsed = aggregated.map((e) => e.amount).reduce((a, b) => a + b, 0);
-  const { userCurrency } = t;
+  const { userCurrency, userDecimalPoint } = t;
   return [
     ...aggregated.map((e) =>
       says.reportSummaryItem({
         categoryName: t.category.findNameByIndex(e.categoryIndex),
         amount: e.amount,
         currency: userCurrency,
+        decimalPoint: userDecimalPoint,
       })
     ),
-    says.reportSummaryEnd({ totalUsed, currency: userCurrency }),
+    says.reportSummaryEnd({
+      totalUsed,
+      currency: userCurrency,
+      decimalPoint: userDecimalPoint,
+    }),
   ].join("\n");
 };
 

@@ -51,6 +51,7 @@ const startModifyHistory = async (context: Context, count: number) => {
       comment: e.comment,
       amount: e.amount,
       currency: userCurrency,
+      decimalPoint: t.userDecimalPoint,
     }),
   }));
   context.transit("modify", { data });
